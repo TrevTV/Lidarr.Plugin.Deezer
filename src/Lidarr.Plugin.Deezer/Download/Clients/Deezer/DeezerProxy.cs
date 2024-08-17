@@ -8,21 +8,21 @@ using NzbDrone.Common.Disk;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Common.Http;
 using NzbDrone.Common.Serializer;
-using NzbDrone.Core.Indexers.Deemix;
+using NzbDrone.Core.Indexers.Deezer;
 
-namespace NzbDrone.Core.Download.Clients.Deemix
+namespace NzbDrone.Core.Download.Clients.Deezer
 {
-    public interface IDeemixProxy
+    public interface IDeezerProxy
     {
-        DeemixConfig GetSettings(DeemixSettings settings);
-        List<DownloadClientItem> GetQueue(DeemixSettings settings);
-        string Download(string url, int bitrate, DeemixSettings settings);
-        void RemoveFromQueue(string downloadId, DeemixSettings settings);
-        public void Authenticate(DeemixSettings settings);
-        public void Authenticate(DeemixIndexerSettings settings);
+        DeezerConfig GetSettings(DeezerSettings settings);
+        List<DownloadClientItem> GetQueue(DeezerSettings settings);
+        string Download(string url, int bitrate, DeezerSettings settings);
+        void RemoveFromQueue(string downloadId, DeezerSettings settings);
+        public void Authenticate(DeezerSettings settings);
+        public void Authenticate(DeezerIndexerSettings settings);
     }
 
-    public class DeemixProxy : IDeemixProxy
+    public class DeezerProxy : IDeezerProxy
     {
         private static readonly Dictionary<string, long> Bitrates = new Dictionary<string, long>
         {
@@ -39,35 +39,35 @@ namespace NzbDrone.Core.Download.Clients.Deemix
 
         private readonly ICached<string> _sessionCookieCache;
         private readonly ICached<DateTime?> _startTimeCache;
-        private readonly ICached<DeemixUser> _userCache;
+        private readonly ICached<DeezerUser> _userCache;
         private readonly IHttpClient _httpClient;
         private readonly Logger _logger;
 
         private double _bytesPerSecond = 0;
 
-        public DeemixProxy(ICacheManager cacheManager,
+        public DeezerProxy(ICacheManager cacheManager,
             IHttpClient httpClient,
             Logger logger)
         {
             _sessionCookieCache = cacheManager.GetCache<string>(GetType(), "sessionCookies");
             _startTimeCache = cacheManager.GetCache<DateTime?>(GetType(), "startTimes");
-            _userCache = cacheManager.GetCache<DeemixUser>(GetType(), "user");
+            _userCache = cacheManager.GetCache<DeezerUser>(GetType(), "user");
             _httpClient = httpClient;
             _logger = logger;
         }
 
-        public DeemixConfig GetSettings(DeemixSettings settings)
+        public DeezerConfig GetSettings(DeezerSettings settings)
         {
             var request = BuildRequest(settings).Resource("/api/getSettings");
-            var response = ProcessRequest<DeemixConfigResult>(request);
+            var response = ProcessRequest<DeezerConfigResult>(request);
 
             return response.Settings;
         }
 
-        public List<DownloadClientItem> GetQueue(DeemixSettings settings)
+        public List<DownloadClientItem> GetQueue(DeezerSettings settings)
         {
             var request = BuildRequest(settings).Resource("/api/getQueue");
-            var response = ProcessRequest<DeemixQueue>(request);
+            var response = ProcessRequest<DeezerQueue>(request);
 
             var completed = response.Queue.Values.Where(x => x.Status == "completed");
             var queue = response.Queue.Values.Where(x => x.Status == "inQueue").OrderBy(x => response.QueueOrder.IndexOf(x.Id));
@@ -94,7 +94,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
             return result;
         }
 
-        public void RemoveFromQueue(string downloadId, DeemixSettings settings)
+        public void RemoveFromQueue(string downloadId, DeezerSettings settings)
         {
             var request = BuildRequest(settings)
                 .Resource("/api/removeFromQueue")
@@ -104,7 +104,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
             ProcessRequest(request);
         }
 
-        public string Download(string url, int bitrate, DeemixSettings settings)
+        public string Download(string url, int bitrate, DeezerSettings settings)
         {
             Authenticate(settings);
 
@@ -114,23 +114,23 @@ namespace NzbDrone.Core.Download.Clients.Deemix
                 .AddFormParameter("url", url)
                 .AddFormParameter("bitrate", bitrate);
 
-            var response = ProcessRequest<DeemixResult<DeemixAddResult>>(request);
+            var response = ProcessRequest<DeezerResult<DeezerAddResult>>(request);
 
             if (response.Result)
             {
                 if (response.Data.Obj.Count != 1)
                 {
-                    throw new DownloadClientException("Expected Deemix to add 1 item, got {0}", response.Data.Obj.Count);
+                    throw new DownloadClientException("Expected Deezer to add 1 item, got {0}", response.Data.Obj.Count);
                 }
 
                 _logger.Trace("Downloading item {0}", response.Data.Obj[0].Uuid);
                 return response.Data.Obj[0].Uuid;
             }
 
-            throw new DownloadClientException("Error adding item to Deemix: {0}", response.Errid);
+            throw new DownloadClientException("Error adding item to Deezer: {0}", response.Errid);
         }
 
-        private DownloadClientItem ToDownloadClientItem(DeemixQueueItem x)
+        private DownloadClientItem ToDownloadClientItem(DeezerQueueItem x)
         {
             var title = $"{x.Artist} - {x.Title} [WEB] {Formats[x.Bitrate]}";
             if (x.Explicit)
@@ -161,7 +161,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
             return item;
         }
 
-        private static DownloadItemStatus GetItemStatus(DeemixQueueItem item)
+        private static DownloadItemStatus GetItemStatus(DeezerQueueItem item)
         {
             if (item.Failed > 0)
             {
@@ -186,7 +186,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
             return DownloadItemStatus.Queued;
         }
 
-        private TimeSpan? GetRemainingTime(DeemixQueueItem x, long size)
+        private TimeSpan? GetRemainingTime(DeezerQueueItem x, long size)
         {
             if (x.Progress == 100)
             {
@@ -215,7 +215,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
             return TimeSpan.FromTicks((long)(elapsed.Value.Ticks * (1 - progress) / progress));
         }
 
-        private HttpRequestBuilder BuildRequest(DeemixSettings settings)
+        private HttpRequestBuilder BuildRequest(DeezerSettings settings)
         {
             return new HttpRequestBuilder(settings.UseSsl, settings.Host, settings.Port, settings.UrlBase)
             {
@@ -259,17 +259,17 @@ namespace NzbDrone.Core.Download.Clients.Deemix
             }
             catch (HttpException ex)
             {
-                throw new DownloadClientException("Failed to connect to Deemix, check your settings.", ex);
+                throw new DownloadClientException("Failed to connect to Deezer, check your settings.", ex);
             }
             catch (WebException ex)
             {
-                throw new DownloadClientException("Failed to connect to Deemix, please check your settings.", ex);
+                throw new DownloadClientException("Failed to connect to Deezer, please check your settings.", ex);
             }
 
             return response.Content;
         }
 
-        public void Authenticate(DeemixSettings settings)
+        public void Authenticate(DeezerSettings settings)
         {
             var requestBuilder = BuildRequest(settings);
             var baseUrl = requestBuilder.BaseUrl.FullUri;
@@ -277,7 +277,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
             Authenticate(baseUrl, settings.Arl);
         }
 
-        public void Authenticate(DeemixIndexerSettings settings)
+        public void Authenticate(DeezerIndexerSettings settings)
         {
             Authenticate(settings.BaseUrl, settings.Arl);
         }
@@ -290,7 +290,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
             if (user?.CurrentUser?.Name != null)
             {
                 _userCache.Set(baseUrl, user.CurrentUser);
-                _logger.Debug("Already logged in to Deemix.");
+                _logger.Debug("Already logged in to Deezer.");
                 return;
             }
 
@@ -323,7 +323,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
                 if (user?.CurrentUser?.Name != null)
                 {
                     _userCache.Set(baseUrl, user.CurrentUser);
-                    _logger.Debug("Deemix authentication succeeded");
+                    _logger.Debug("Deezer authentication succeeded");
                     return;
                 }
 
@@ -331,15 +331,15 @@ namespace NzbDrone.Core.Download.Clients.Deemix
                 _userCache.Remove(baseUrl);
             }
 
-            throw new DownloadClientException("Failed to authenticate with Deemix");
+            throw new DownloadClientException("Failed to authenticate with Deezer");
         }
 
-        private DeemixConnect Connect(string baseUrl)
+        private DeezerConnect Connect(string baseUrl)
         {
             var requestBuilder = BuildRequest(baseUrl);
             requestBuilder.Resource("api/connect");
 
-            var response = ProcessRequest<DeemixConnect>(requestBuilder);
+            var response = ProcessRequest<DeezerConnect>(requestBuilder);
 
             return response;
         }

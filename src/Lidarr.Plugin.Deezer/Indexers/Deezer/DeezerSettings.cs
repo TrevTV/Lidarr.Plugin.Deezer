@@ -2,27 +2,27 @@ using FluentValidation;
 using NzbDrone.Core.Annotations;
 using NzbDrone.Core.Validation;
 
-namespace NzbDrone.Core.Indexers.Deemix
+namespace NzbDrone.Core.Indexers.Deezer
 {
-    public class DeemixIndexerSettingsValidator : AbstractValidator<DeemixIndexerSettings>
+    public class DeezerIndexerSettingsValidator : AbstractValidator<DeezerIndexerSettings>
     {
-        public DeemixIndexerSettingsValidator()
+        public DeezerIndexerSettingsValidator()
         {
             RuleFor(c => c.BaseUrl).ValidRootUrl();
             RuleFor(c => c.Arl).NotEmpty().Length(192);
         }
     }
 
-    public class DeemixIndexerSettings : IIndexerSettings
+    public class DeezerIndexerSettings : IIndexerSettings
     {
-        private static readonly DeemixIndexerSettingsValidator Validator = new DeemixIndexerSettingsValidator();
+        private static readonly DeezerIndexerSettingsValidator Validator = new DeezerIndexerSettingsValidator();
 
-        public DeemixIndexerSettings()
+        public DeezerIndexerSettings()
         {
             BaseUrl = "http://localhost:6595";
         }
 
-        [FieldDefinition(0, Label = "URL", HelpText = "The URL to your Deemix download client")]
+        [FieldDefinition(0, Label = "URL", HelpText = "The URL to your Deezer download client")]
         public string BaseUrl { get; set; }
 
         [FieldDefinition(1, Label = "Arl", Type = FieldType.Textbox)]

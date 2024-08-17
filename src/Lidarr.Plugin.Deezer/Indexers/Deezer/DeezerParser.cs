@@ -2,22 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NzbDrone.Common.Http;
-using NzbDrone.Core.Download.Clients.Deemix;
+using NzbDrone.Core.Download.Clients.Deezer;
 using NzbDrone.Core.Parser.Model;
 
-namespace NzbDrone.Core.Indexers.Deemix
+namespace NzbDrone.Core.Indexers.Deezer
 {
-    public class DeemixParser : IParseIndexerResponse
+    public class DeezerParser : IParseIndexerResponse
     {
         private static readonly int[] _bitrates = new[] { 1, 3, 9 };
 
-        public DeemixUser User { get; set; }
+        public DeezerUser User { get; set; }
 
         public IList<ReleaseInfo> ParseResponse(IndexerResponse response)
         {
             var torrentInfos = new List<ReleaseInfo>();
 
-            var jsonResponse = new HttpResponse<DeemixSearchResponse>(response.HttpResponse);
+            var jsonResponse = new HttpResponse<DeezerSearchResponse>(response.HttpResponse);
 
             foreach (var result in jsonResponse.Resource.Data)
             {
@@ -44,7 +44,7 @@ namespace NzbDrone.Core.Indexers.Deemix
                     .ToArray();
         }
 
-        private static ReleaseInfo ToReleaseInfo(DeemixGwAlbum x, int bitrate)
+        private static ReleaseInfo ToReleaseInfo(DeezerGwAlbum x, int bitrate)
         {
             var publishDate = DateTime.UtcNow;
             var year = 0;
@@ -61,13 +61,13 @@ namespace NzbDrone.Core.Indexers.Deemix
 
             var result = new ReleaseInfo
             {
-                Guid = $"Deemix-{x.AlbumId}-{bitrate}",
+                Guid = $"Deezer-{x.AlbumId}-{bitrate}",
                 Artist = x.ArtistName,
                 Album = x.AlbumTitle,
                 DownloadUrl = x.Link,
                 InfoUrl = x.Link,
                 PublishDate = publishDate,
-                DownloadProtocol = nameof(DeemixDownloadProtocol)
+                DownloadProtocol = nameof(DeezerDownloadProtocol)
             };
 
             long actualBitrate;

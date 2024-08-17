@@ -8,16 +8,16 @@ using NzbDrone.Core.Parser.Model;
 
 namespace NzbDrone.Core.Blocklisting
 {
-    public class DeemixBlocklist : IBlocklistForProtocol
+    public class DeezerBlocklist : IBlocklistForProtocol
     {
         private readonly IBlocklistRepository _blocklistRepository;
 
-        public DeemixBlocklist(IBlocklistRepository blocklistRepository)
+        public DeezerBlocklist(IBlocklistRepository blocklistRepository)
         {
             _blocklistRepository = blocklistRepository;
         }
 
-        public string Protocol => nameof(DeemixDownloadProtocol);
+        public string Protocol => nameof(DeezerDownloadProtocol);
 
         public bool IsBlocklisted(int artistId, ReleaseInfo release)
         {

@@ -4,11 +4,11 @@ using NzbDrone.Core.Annotations;
 using NzbDrone.Core.ThingiProvider;
 using NzbDrone.Core.Validation;
 
-namespace NzbDrone.Core.Download.Clients.Deemix
+namespace NzbDrone.Core.Download.Clients.Deezer
 {
-    public class DeemixSettingsValidator : AbstractValidator<DeemixSettings>
+    public class DeezerSettingsValidator : AbstractValidator<DeezerSettings>
     {
-        public DeemixSettingsValidator()
+        public DeezerSettingsValidator()
         {
             RuleFor(c => c.Host).ValidHost();
             RuleFor(c => c.Port).InclusiveBetween(1, 65535);
@@ -17,11 +17,11 @@ namespace NzbDrone.Core.Download.Clients.Deemix
         }
     }
 
-    public class DeemixSettings : IProviderConfig
+    public class DeezerSettings : IProviderConfig
     {
-        private static readonly DeemixSettingsValidator Validator = new DeemixSettingsValidator();
+        private static readonly DeezerSettingsValidator Validator = new DeezerSettingsValidator();
 
-        public DeemixSettings()
+        public DeezerSettings()
         {
             Host = "localhost";
             Port = 6595;

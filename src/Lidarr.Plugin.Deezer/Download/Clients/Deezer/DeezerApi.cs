@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace NzbDrone.Core.Download.Clients.Deemix
+namespace NzbDrone.Core.Download.Clients.Deezer
 {
-    public class DeemixResult<T>
+    public class DeezerResult<T>
         where T : new()
     {
         public bool Result { get; set; }
@@ -14,24 +14,24 @@ namespace NzbDrone.Core.Download.Clients.Deemix
         public T Data { get; set; }
     }
 
-    public class DeemixConfigResult
+    public class DeezerConfigResult
     {
-        public DeemixConfig Settings { get; set; }
+        public DeezerConfig Settings { get; set; }
     }
 
-    public class DeemixConfig
+    public class DeezerConfig
     {
         public string DownloadLocation { get; set; }
         public bool CreateAlbumFolder { get; set; }
         public bool CreateSingleFolder { get; set; }
     }
 
-    public class DeemixConnect
+    public class DeezerConnect
     {
-        public DeemixUser CurrentUser { get; set; }
+        public DeezerUser CurrentUser { get; set; }
     }
 
-    public class DeemixUser
+    public class DeezerUser
     {
         public long Id { get; set; }
         public string Name { get; set; }
@@ -41,21 +41,21 @@ namespace NzbDrone.Core.Download.Clients.Deemix
         public bool CanStreamLossless { get; set; }
     }
 
-    public class DeemixAddResult
+    public class DeezerAddResult
     {
         public List<string> Url { get; set; }
         public string Bitrate { get; set; }
-        public List<DeemixQueueItem> Obj { get; set; }
+        public List<DeezerQueueItem> Obj { get; set; }
     }
 
-    public class DeemixQueue
+    public class DeezerQueue
     {
-        public Dictionary<string, DeemixQueueItem> Queue { get; set; }
+        public Dictionary<string, DeezerQueueItem> Queue { get; set; }
         public List<string> QueueOrder { get; set; }
-        public DeemixQueueItem Current { get; set; }
+        public DeezerQueueItem Current { get; set; }
     }
 
-    public class DeemixQueueItem
+    public class DeezerQueueItem
     {
         public string Title { get; set; }
         public string Artist { get; set; }
@@ -67,7 +67,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
         public int Failed { get; set; }
         public List<object> Errors { get; set; }
         public int Progress { get; set; }
-        public List<DeemixFile> Files { get; set; }
+        public List<DeezerFile> Files { get; set; }
         public string Type { get; set; }
         public string Id { get; set; }
         public string Bitrate { get; set; }
@@ -75,9 +75,9 @@ namespace NzbDrone.Core.Download.Clients.Deemix
         public string Status { get; set; }
     }
 
-    public class DeemixSearchResponse
+    public class DeezerSearchResponse
     {
-        public IList<DeemixGwAlbum> Data { get; set; }
+        public IList<DeezerGwAlbum> Data { get; set; }
         public int Total { get; set; }
     }
 
@@ -90,7 +90,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
         public int ExplicitCover { get; set; }
     }
 
-    public class DeemixGwAlbum
+    public class DeezerGwAlbum
     {
         [JsonProperty("ALB_ID")]
         public string AlbumId { get; set; }
@@ -106,7 +106,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
         [JsonProperty("EXPLICIT_ALBUM_CONTENT")]
         public ExplicitAlbumContent ExplicitAlbumContent { get; set; }
 
-        // These two are string not DateTime since sometimes Deemix provides invalid values (like 0000-00-00)
+        // These two are string not DateTime since sometimes Deezer provides invalid values (like 0000-00-00)
         [JsonProperty("PHYSICAL_RELEASE_DATE")]
         public string PhysicalReleaseDate { get; set; }
         [JsonProperty("DIGITAL_RELEASE_DATE")]
@@ -128,7 +128,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
                                 ExplicitAlbumContent?.ExplicitCover == 1;
     }
 
-    public class DeemixAlbumUrl
+    public class DeezerAlbumUrl
     {
         [JsonProperty("url")]
         public string Url { get; set; }
@@ -137,7 +137,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
         public string Ext { get; set; }
     }
 
-    public class DeemixFileData
+    public class DeezerFileData
     {
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -149,10 +149,10 @@ namespace NzbDrone.Core.Download.Clients.Deemix
         public string Artist { get; set; }
     }
 
-    public class DeemixFile
+    public class DeezerFile
     {
         [JsonProperty("albumURLs")]
-        public List<DeemixAlbumUrl> AlbumUrls { get; set; }
+        public List<DeezerAlbumUrl> AlbumUrls { get; set; }
 
         [JsonProperty("albumPath")]
         public string AlbumPath { get; set; }
@@ -164,7 +164,7 @@ namespace NzbDrone.Core.Download.Clients.Deemix
         public string Filename { get; set; }
 
         [JsonProperty("data")]
-        public DeemixFileData Data { get; set; }
+        public DeezerFileData Data { get; set; }
 
         [JsonProperty("path")]
         public string Path { get; set; }

@@ -3,13 +3,13 @@ using NLog;
 using NzbDrone.Common.Http;
 using NzbDrone.Core.IndexerSearch.Definitions;
 
-namespace NzbDrone.Core.Indexers.Deemix
+namespace NzbDrone.Core.Indexers.Deezer
 {
-    public class DeemixRequestGenerator : IIndexerRequestGenerator
+    public class DeezerRequestGenerator : IIndexerRequestGenerator
     {
         private const int PageSize = 100;
         private const int MaxPages = 30;
-        public DeemixIndexerSettings Settings { get; set; }
+        public DeezerIndexerSettings Settings { get; set; }
         public Logger Logger { get; set; }
 
         public virtual IndexerPageableRequestChain GetRecentRequests()

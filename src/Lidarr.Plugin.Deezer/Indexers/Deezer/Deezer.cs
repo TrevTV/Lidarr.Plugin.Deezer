@@ -3,25 +3,25 @@ using NLog;
 using NzbDrone.Common.Cache;
 using NzbDrone.Common.Http;
 using NzbDrone.Core.Configuration;
-using NzbDrone.Core.Download.Clients.Deemix;
+using NzbDrone.Core.Download.Clients.Deezer;
 using NzbDrone.Core.Parser;
 
-namespace NzbDrone.Core.Indexers.Deemix
+namespace NzbDrone.Core.Indexers.Deezer
 {
-    public class Deemix : HttpIndexerBase<DeemixIndexerSettings>
+    public class Deezer : HttpIndexerBase<DeezerIndexerSettings>
     {
-        public override string Name => "Deemix";
-        public override string Protocol => nameof(DeemixDownloadProtocol);
+        public override string Name => "Deezer";
+        public override string Protocol => nameof(DeezerDownloadProtocol);
         public override bool SupportsRss => true;
         public override bool SupportsSearch => true;
         public override int PageSize => 100;
         public override TimeSpan RateLimit => new TimeSpan(0);
 
-        private readonly ICached<DeemixUser> _userCache;
-        private readonly IDeemixProxy _deemixProxy;
+        private readonly ICached<DeezerUser> _userCache;
+        private readonly IDeezerProxy _deezerProxy;
 
-        public Deemix(ICacheManager cacheManager,
-            IDeemixProxy deemixProxy,
+        public Deezer(ICacheManager cacheManager,
+            IDeezerProxy deezerProxy,
             IHttpClient httpClient,
             IIndexerStatusService indexerStatusService,
             IConfigService configService,
@@ -29,13 +29,13 @@ namespace NzbDrone.Core.Indexers.Deemix
             Logger logger)
             : base(httpClient, indexerStatusService, configService, parsingService, logger)
         {
-            _userCache = cacheManager.GetCache<DeemixUser>(typeof(DeemixProxy), "user");
-            _deemixProxy = deemixProxy;
+            _userCache = cacheManager.GetCache<DeezerUser>(typeof(DeezerProxy), "user");
+            _deezerProxy = deezerProxy;
         }
 
         public override IIndexerRequestGenerator GetRequestGenerator()
         {
-            return new DeemixRequestGenerator()
+            return new DeezerRequestGenerator()
             {
                 Settings = Settings,
                 Logger = _logger
@@ -44,9 +44,9 @@ namespace NzbDrone.Core.Indexers.Deemix
 
         public override IParseIndexerResponse GetParser()
         {
-            _deemixProxy.Authenticate(Settings);
+            _deezerProxy.Authenticate(Settings);
 
-            return new DeemixParser()
+            return new DeezerParser()
             {
                 User = _userCache.Find(Settings.BaseUrl)
             };

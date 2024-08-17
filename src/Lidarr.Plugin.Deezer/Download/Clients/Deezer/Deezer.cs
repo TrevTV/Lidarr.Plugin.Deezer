@@ -12,13 +12,13 @@ using NzbDrone.Core.Parser.Model;
 using NzbDrone.Core.RemotePathMappings;
 using NzbDrone.Core.Validation;
 
-namespace NzbDrone.Core.Download.Clients.Deemix
+namespace NzbDrone.Core.Download.Clients.Deezer
 {
-    public class Deemix : DownloadClientBase<DeemixSettings>
+    public class Deezer : DownloadClientBase<DeezerSettings>
     {
-        private readonly IDeemixProxy _proxy;
+        private readonly IDeezerProxy _proxy;
 
-        public Deemix(IDeemixProxy proxy,
+        public Deezer(IDeezerProxy proxy,
                       IConfigService configService,
                       IDiskProvider diskProvider,
                       IRemotePathMappingService remotePathMappingService,
@@ -28,9 +28,9 @@ namespace NzbDrone.Core.Download.Clients.Deemix
             _proxy = proxy;
         }
 
-        public override string Protocol => nameof(DeemixDownloadProtocol);
+        public override string Protocol => nameof(DeezerDownloadProtocol);
 
-        public override string Name => "Deemix";
+        public override string Name => "Deezer";
 
         public override IEnumerable<DownloadClientItem> GetItems()
         {
@@ -99,19 +99,19 @@ namespace NzbDrone.Core.Download.Clients.Deemix
 
             if (!config.CreateAlbumFolder)
             {
-                return new NzbDroneValidationFailure(string.Empty, "Deemix must have 'Create Album Folders' enabled")
+                return new NzbDroneValidationFailure(string.Empty, "Deezer must have 'Create Album Folders' enabled")
                 {
                     InfoLink = HttpRequestBuilder.BuildBaseUrl(Settings.UseSsl, Settings.Host, Settings.Port, Settings.UrlBase),
-                    DetailedDescription = "Deemix must have 'Create Album Folders' enabled, otherwise Lidarr will not be able to import the downloads",
+                    DetailedDescription = "Deezer must have 'Create Album Folders' enabled, otherwise Lidarr will not be able to import the downloads",
                 };
             }
 
             if (!config.CreateSingleFolder)
             {
-                return new NzbDroneValidationFailure(string.Empty, "Deemix must have 'Create folder structure for singles' enabled")
+                return new NzbDroneValidationFailure(string.Empty, "Deezer must have 'Create folder structure for singles' enabled")
                 {
                     InfoLink = HttpRequestBuilder.BuildBaseUrl(Settings.UseSsl, Settings.Host, Settings.Port, Settings.UrlBase),
-                    DetailedDescription = "Deemix must have 'Create folder structure for singles' enabled, otherwise Lidarr will not be able to import single downloads",
+                    DetailedDescription = "Deezer must have 'Create folder structure for singles' enabled, otherwise Lidarr will not be able to import single downloads",
                 };
             }
 
@@ -121,10 +121,10 @@ namespace NzbDrone.Core.Download.Clients.Deemix
             }
             catch (DownloadClientException)
             {
-                return new NzbDroneValidationFailure(string.Empty, "Could not login to Deemix. Invalid ARL?")
+                return new NzbDroneValidationFailure(string.Empty, "Could not login to Deezer. Invalid ARL?")
                 {
                     InfoLink = HttpRequestBuilder.BuildBaseUrl(Settings.UseSsl, Settings.Host, Settings.Port, Settings.UrlBase),
-                    DetailedDescription = "Deemix requires a valid ARL to initiate downloads",
+                    DetailedDescription = "Deezer requires a valid ARL to initiate downloads",
                 };
             }
 
