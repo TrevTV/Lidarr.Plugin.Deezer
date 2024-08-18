@@ -24,6 +24,9 @@ namespace NzbDrone.Plugin.Deezer
 
         internal bool CheckAndSetARL(string arl)
         {
+            if (string.IsNullOrEmpty(arl))
+                return string.IsNullOrEmpty(_client.ActiveARL) ? false : true;
+
             return SetValidARL(new(arl));
         }
 
