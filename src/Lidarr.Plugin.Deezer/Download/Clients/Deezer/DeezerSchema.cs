@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
@@ -12,18 +11,6 @@ namespace NzbDrone.Core.Download.Clients.Deezer
         public string Errid { get; set; }
 
         public T Data { get; set; }
-    }
-
-    public class DeezerConfigResult
-    {
-        public DeezerConfig Settings { get; set; }
-    }
-
-    public class DeezerConfig
-    {
-        public string DownloadLocation { get; set; }
-        public bool CreateAlbumFolder { get; set; }
-        public bool CreateSingleFolder { get; set; }
     }
 
     public class DeezerConnect

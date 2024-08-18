@@ -48,8 +48,6 @@ namespace NzbDrone.Core.Indexers.Deezer
 
         public override IParseIndexerResponse GetParser()
         {
-            _deezerProxy.Authenticate(Settings);
-
             return new DeezerParser()
             {
                 User = _userCache.Find(Settings.BaseUrl)

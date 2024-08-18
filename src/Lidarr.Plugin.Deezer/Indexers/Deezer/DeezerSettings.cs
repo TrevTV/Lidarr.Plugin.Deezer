@@ -26,11 +26,11 @@ namespace NzbDrone.Core.Indexers.Deezer
         {
             get
             {
-                return DeezerAPI.Instance!._arl;
+                return DeezerAPI.Instance.Client.ActiveARL;
             }
             set
             {
-                DeezerAPI.Instance!.UpdateArl(value);
+                DeezerAPI.Instance.UpdateArl(value);
             }
         }
 

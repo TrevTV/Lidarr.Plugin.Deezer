@@ -11,6 +11,7 @@ using NzbDrone.Core.Indexers;
 using NzbDrone.Core.Parser.Model;
 using NzbDrone.Core.RemotePathMappings;
 using NzbDrone.Core.Validation;
+using NzbDrone.Plugin.Deezer;
 
 namespace NzbDrone.Core.Download.Clients.Deezer
 {
@@ -39,7 +40,6 @@ namespace NzbDrone.Core.Download.Clients.Deezer
             foreach (var item in queue)
             {
                 item.DownloadClientInfo = DownloadClientItemClientInfo.FromDownloadClient(this, false);
-                item.OutputPath = _remotePathMappingService.RemapRemoteToLocal(Settings.Host, item.OutputPath);
             }
 
             return queue;
@@ -79,12 +79,10 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
         public override DownloadClientInfo GetStatus()
         {
-            var config = _proxy.GetSettings(Settings);
-
             return new DownloadClientInfo
             {
-                IsLocalhost = Settings.Host == "127.0.0.1" || Settings.Host == "localhost",
-                OutputRootFolders = new List<OsPath> { _remotePathMappingService.RemapRemoteToLocal(Settings.Host, new OsPath(config.DownloadLocation)) }
+                IsLocalhost = false,
+                OutputRootFolders = [/* TODO: need to get the lidarr download path here, idk how */]
             };
         }
 
@@ -95,36 +93,15 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
         private ValidationFailure TestSettings()
         {
-            var config = _proxy.GetSettings(Settings);
-
-            if (!config.CreateAlbumFolder)
-            {
-                return new NzbDroneValidationFailure(string.Empty, "Deezer must have 'Create Album Folders' enabled")
-                {
-                    InfoLink = HttpRequestBuilder.BuildBaseUrl(Settings.UseSsl, Settings.Host, Settings.Port, Settings.UrlBase),
-                    DetailedDescription = "Deezer must have 'Create Album Folders' enabled, otherwise Lidarr will not be able to import the downloads",
-                };
-            }
-
-            if (!config.CreateSingleFolder)
-            {
-                return new NzbDroneValidationFailure(string.Empty, "Deezer must have 'Create folder structure for singles' enabled")
-                {
-                    InfoLink = HttpRequestBuilder.BuildBaseUrl(Settings.UseSsl, Settings.Host, Settings.Port, Settings.UrlBase),
-                    DetailedDescription = "Deezer must have 'Create folder structure for singles' enabled, otherwise Lidarr will not be able to import single downloads",
-                };
-            }
-
             try
             {
-                _proxy.Authenticate(Settings);
+                DeezerAPI.Instance.Client.GWApi.GetArtist(145).Wait();
             }
-            catch (DownloadClientException)
+            catch (Exception)
             {
                 return new NzbDroneValidationFailure(string.Empty, "Could not login to Deezer. Invalid ARL?")
                 {
-                    InfoLink = HttpRequestBuilder.BuildBaseUrl(Settings.UseSsl, Settings.Host, Settings.Port, Settings.UrlBase),
-                    DetailedDescription = "Deezer requires a valid ARL to initiate downloads",
+                    DetailedDescription = "Deezer requires a valid ARL to initiate downloads.",
                 };
             }
 

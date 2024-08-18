@@ -14,12 +14,9 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 {
     public interface IDeezerProxy
     {
-        DeezerConfig GetSettings(DeezerSettings settings);
         List<DownloadClientItem> GetQueue(DeezerSettings settings);
         string Download(string url, int bitrate, DeezerSettings settings);
         void RemoveFromQueue(string downloadId, DeezerSettings settings);
-        public void Authenticate(DeezerSettings settings);
-        public void Authenticate(DeezerIndexerSettings settings);
     }
 
     public class DeezerProxy : IDeezerProxy
@@ -56,17 +53,11 @@ namespace NzbDrone.Core.Download.Clients.Deezer
             _logger = logger;
         }
 
-        public DeezerConfig GetSettings(DeezerSettings settings)
-        {
-            var request = BuildRequest(settings).Resource("/api/getSettings");
-            var response = ProcessRequest<DeezerConfigResult>(request);
-
-            return response.Settings;
-        }
-
         public List<DownloadClientItem> GetQueue(DeezerSettings settings)
         {
-            var request = BuildRequest(settings).Resource("/api/getQueue");
+            // TODO: write queue system
+
+            /*var request = BuildRequest(settings).Resource("/api/getQueue");
             var response = ProcessRequest<DeezerQueue>(request);
 
             var completed = response.Queue.Values.Where(x => x.Status == "completed");
@@ -91,22 +82,27 @@ namespace NzbDrone.Core.Download.Clients.Deezer
                 }
             }
 
-            return result;
+            return result;*/
+            return [];
         }
 
         public void RemoveFromQueue(string downloadId, DeezerSettings settings)
         {
-            var request = BuildRequest(settings)
+            // TODO: write queue system
+
+            /*var request = BuildRequest(settings)
                 .Resource("/api/removeFromQueue")
                 .Post()
                 .AddQueryParam("uuid", downloadId);
 
-            ProcessRequest(request);
+            ProcessRequest(request);*/
         }
 
         public string Download(string url, int bitrate, DeezerSettings settings)
         {
-            Authenticate(settings);
+            // TODO: write download system
+
+            /*Authenticate(settings);
 
             var request = BuildRequest(settings)
                 .Resource("/api/addToQueue")
@@ -127,7 +123,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer
                 return response.Data.Obj[0].Uuid;
             }
 
-            throw new DownloadClientException("Error adding item to Deezer: {0}", response.Errid);
+            throw new DownloadClientException("Error adding item to Deezer: {0}", response.Errid);*/
+            return "";
         }
 
         private DownloadClientItem ToDownloadClientItem(DeezerQueueItem x)
@@ -213,135 +210,6 @@ namespace NzbDrone.Core.Download.Clients.Deezer
             _bytesPerSecond = (progress * size) / elapsed.Value.TotalSeconds;
 
             return TimeSpan.FromTicks((long)(elapsed.Value.Ticks * (1 - progress) / progress));
-        }
-
-        private HttpRequestBuilder BuildRequest(DeezerSettings settings)
-        {
-            return new HttpRequestBuilder(settings.UseSsl, settings.Host, settings.Port, settings.UrlBase)
-            {
-                LogResponseContent = true
-            };
-        }
-
-        private HttpRequestBuilder BuildRequest(string baseUrl)
-        {
-            return new HttpRequestBuilder(baseUrl)
-            {
-                LogResponseContent = true
-            };
-        }
-
-        private TResult ProcessRequest<TResult>(HttpRequestBuilder requestBuilder)
-            where TResult : new()
-        {
-            var responseContent = ProcessRequest(requestBuilder);
-
-            return Json.Deserialize<TResult>(responseContent);
-        }
-
-        private string ProcessRequest(HttpRequestBuilder requestBuilder)
-        {
-            var request = requestBuilder.Build();
-            request.LogResponseContent = true;
-            request.SuppressHttpErrorStatusCodes = new[] { HttpStatusCode.Forbidden };
-
-            var cookie = _sessionCookieCache.Find(requestBuilder.BaseUrl.FullUri);
-            if (cookie != null)
-            {
-                _logger.Trace("Adding cookie {0}", cookie);
-                request.Cookies.Add("connect.sid", cookie);
-            }
-
-            HttpResponse response;
-            try
-            {
-                response = _httpClient.Execute(request);
-            }
-            catch (HttpException ex)
-            {
-                throw new DownloadClientException("Failed to connect to Deezer, check your settings.", ex);
-            }
-            catch (WebException ex)
-            {
-                throw new DownloadClientException("Failed to connect to Deezer, please check your settings.", ex);
-            }
-
-            return response.Content;
-        }
-
-        public void Authenticate(DeezerSettings settings)
-        {
-            var requestBuilder = BuildRequest(settings);
-            var baseUrl = requestBuilder.BaseUrl.FullUri;
-
-            Authenticate(baseUrl, settings.Arl);
-        }
-
-        public void Authenticate(DeezerIndexerSettings settings)
-        {
-            Authenticate(settings.BaseUrl, settings.Arl);
-        }
-
-        private void Authenticate(string baseUrl, string arl)
-        {
-            var requestBuilder = BuildRequest(baseUrl);
-
-            var user = Connect(baseUrl);
-            if (user?.CurrentUser?.Name != null)
-            {
-                _userCache.Set(baseUrl, user.CurrentUser);
-                _logger.Debug("Already logged in to Deezer.");
-                return;
-            }
-
-            var cookie = _sessionCookieCache.Find(baseUrl);
-
-            if (cookie == null)
-            {
-                _sessionCookieCache.Remove(baseUrl);
-                _userCache.Remove(baseUrl);
-            }
-
-            var authLoginRequest = requestBuilder
-                .Resource("api/loginArl")
-                .Post()
-                .AddFormParameter("arl", arl)
-                .Accept(HttpAccept.Json)
-                .Build();
-
-            var response = _httpClient.Execute(authLoginRequest);
-            var cookies = response.GetCookies();
-
-            if (cookies.ContainsKey("connect.sid"))
-            {
-                cookie = cookies["connect.sid"];
-                _sessionCookieCache.Set(baseUrl, cookie);
-
-                _logger.Debug("Got cookie {0}", cookie);
-
-                user = Connect(baseUrl);
-                if (user?.CurrentUser?.Name != null)
-                {
-                    _userCache.Set(baseUrl, user.CurrentUser);
-                    _logger.Debug("Deezer authentication succeeded");
-                    return;
-                }
-
-                _sessionCookieCache.Remove(baseUrl);
-                _userCache.Remove(baseUrl);
-            }
-
-            throw new DownloadClientException("Failed to authenticate with Deezer");
-        }
-
-        private DeezerConnect Connect(string baseUrl)
-        {
-            var requestBuilder = BuildRequest(baseUrl);
-            requestBuilder.Resource("api/connect");
-
-            var response = ProcessRequest<DeezerConnect>(requestBuilder);
-
-            return response;
         }
     }
 }
