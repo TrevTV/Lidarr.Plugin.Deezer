@@ -9,7 +9,6 @@ using NzbDrone.Core.Download.Clients.Deezer;
 using NzbDrone.Core.Parser.Model;
 using System.Collections.Concurrent;
 using NzbDrone.Plugin.Deezer;
-using Newtonsoft.Json;
 
 namespace NzbDrone.Core.Indexers.Deezer
 {
@@ -111,7 +110,7 @@ namespace NzbDrone.Core.Indexers.Deezer
             }
 
             // bitrate is in kbit/sec, 128 = 1024/8; assuming 3 minutes per track
-            result.Size = int.Parse(x.TrackCount) * 3 * actualBitrate * 128L;
+            result.Size = int.Parse(x.TrackCount) * 3 * 60 * actualBitrate * 128L;
             result.Title = $"{x.ArtistName} - {x.AlbumTitle}";
 
             if (year > 0)
