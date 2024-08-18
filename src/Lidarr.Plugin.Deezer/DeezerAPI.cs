@@ -3,6 +3,8 @@ using System.Net;
 using System.Text;
 using System.Linq;
 using DeezNET;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace NzbDrone.Plugin.Deezer
 {
@@ -30,7 +32,39 @@ namespace NzbDrone.Plugin.Deezer
                 return;
             }
 
-            _client.SetARL(arl).Wait();
+            SetValidARL(new(arl));
+        }
+
+        public bool SetValidARL(ARL arl)
+        {
+            var isCurrentValid = arl == null ? false : arl.IsValid();
+            if (!isCurrentValid)
+            {
+                var arls = ARL.GetSortedARLs();
+                for (var i = 0; i < arls.Length; i++)
+                {
+                    arl = arls[i];
+                    if (arl != null && arl.IsValid())
+                        break;
+                    else
+                        arl = null;
+                }
+            }
+            else
+                return true;
+
+            if (arl == null)
+            {
+                // revert the arl back to nothing since validating sets it to the possible arls
+                _client.SetARL("").Wait();
+                return false;
+            }
+
+            // prevent double hitting the Deezer API when there's no reason to
+            if (_client.ActiveARL != arl.Token)
+                _client.SetARL(arl.Token).Wait();
+
+            return true;
         }
 
         public string GetGWUrl(string method, Dictionary<string, string> parameters = null)

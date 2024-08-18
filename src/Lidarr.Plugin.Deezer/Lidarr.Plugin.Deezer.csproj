@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="DeezNET" Version="1.1.1" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.63" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidarr\src\NzbDrone.Core\Lidarr.Core.csproj">
