@@ -62,6 +62,11 @@ namespace NzbDrone.Core.Download.Clients.Deezer
         public string Status { get; set; }
     }
 
+    public class DeezerSearchResponseWrapper
+    {
+        public DeezerSearchResponse Results { get; set; }
+    }
+
     public class DeezerSearchResponse
     {
         public IList<DeezerGwAlbum> Data { get; set; }

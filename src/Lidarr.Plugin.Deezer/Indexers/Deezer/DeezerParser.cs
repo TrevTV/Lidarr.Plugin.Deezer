@@ -17,9 +17,11 @@ namespace NzbDrone.Core.Indexers.Deezer
         {
             var torrentInfos = new List<ReleaseInfo>();
 
-            var jsonResponse = new HttpResponse<DeezerSearchResponse>(response.HttpResponse);
+            // TODO: check if channels listing, if so, we need to parse it manually
 
-            foreach (var result in jsonResponse.Resource.Data)
+            var jsonResponse = new HttpResponse<DeezerSearchResponseWrapper>(response.HttpResponse);
+
+            foreach (var result in jsonResponse.Resource.Results.Data)
             {
                 // MP3 128
                 torrentInfos.Add(ToReleaseInfo(result, 1));
