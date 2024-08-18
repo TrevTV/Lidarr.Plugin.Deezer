@@ -9,6 +9,7 @@ using DeezNET;
 using DeezNET.Data;
 using DeezNET.Exceptions;
 using Newtonsoft.Json.Linq;
+using NLog;
 using NzbDrone.Plugin.Deezer;
 
 namespace NzbDrone.Core.Download.Clients.Deezer.Queue
@@ -61,10 +62,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
         private readonly byte[] FLAC_MAGIC = Encoding.ASCII.GetBytes("fLaC");
 
-        public async Task DoDownload(DeezerSettings settings, CancellationToken cancellation = default)
+        public async Task DoDownload(DeezerSettings settings, Logger logger, CancellationToken cancellation = default)
         {
-            _tracks ??= await _deezerUrl.GetAssociatedTracks(DeezerAPI.Instance.Client, token: cancellation);
-
             List<Task> tasks = new();
             using SemaphoreSlim semaphore = new(3, 3);
             foreach (var track in _tracks)
@@ -79,8 +78,9 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
                         DownloadedTracks++;
                     }
                     catch (TaskCanceledException) { }
-                    catch
+                    catch (Exception ex)
                     {
+                        logger.Error("Error while downloading Deezer track " + track, ex);
                         FailedTracks++;
                     }
                     finally

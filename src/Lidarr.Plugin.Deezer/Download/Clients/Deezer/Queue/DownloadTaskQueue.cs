@@ -4,6 +4,7 @@ using System.Threading.Channels;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using NLog;
 
 namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 {
@@ -17,8 +18,9 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         private readonly object _lock = new();
 
         private DeezerSettings _settings;
+        private Logger _logger;
 
-        public DownloadTaskQueue(int capacity, DeezerSettings settings)
+        public DownloadTaskQueue(int capacity, DeezerSettings settings, Logger logger)
         {
             BoundedChannelOptions options = new(capacity)
             {
@@ -28,6 +30,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
             _items = new();
             _cancellationSources = new();
             _settings = settings;
+            _logger = logger;
         }
 
         public void StartQueueHandler()
@@ -37,7 +40,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
         private async Task BackgroundProcessing(CancellationToken stoppingToken = default)
         {
-            SemaphoreSlim semaphore = new(3, 3);
+            using SemaphoreSlim semaphore = new(3, 3);
 
             async Task HandleTask(DownloadItem item, Task task)
             {
