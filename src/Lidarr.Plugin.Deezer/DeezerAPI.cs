@@ -8,7 +8,7 @@ namespace NzbDrone.Plugin.Deezer
 {
     public class DeezerAPI
     {
-        public static DeezerAPI Instance { get; private set; }
+        public static DeezerAPI Instance { get; private set; } = new("");
 
         internal DeezerAPI(string arl)
         {
@@ -20,7 +20,7 @@ namespace NzbDrone.Plugin.Deezer
         public DeezerClient Client => _client;
 
         private DeezerClient _client;
-        private string _apiToken => _client.GWApi.ActiveUserData["checkForm"]!.ToString();
+        private string _apiToken => _client.GWApi.ActiveUserData["checkForm"]?.ToString() ?? "null";
 
         internal bool CheckAndSetARL(string arl)
         {
