@@ -13,21 +13,6 @@ namespace NzbDrone.Core.Download.Clients.Deezer
         public T Data { get; set; }
     }
 
-    public class DeezerConnect
-    {
-        public DeezerUser CurrentUser { get; set; }
-    }
-
-    public class DeezerUser
-    {
-        public long Id { get; set; }
-        public string Name { get; set; }
-        [JsonProperty("can_stream_hq")]
-        public bool CanStreamHq { get; set; }
-        [JsonProperty("can_stream_lossless")]
-        public bool CanStreamLossless { get; set; }
-    }
-
     public class DeezerAddResult
     {
         public List<string> Url { get; set; }

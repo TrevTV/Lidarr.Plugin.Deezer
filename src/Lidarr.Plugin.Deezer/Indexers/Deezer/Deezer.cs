@@ -18,7 +18,6 @@ namespace NzbDrone.Core.Indexers.Deezer
         public override int PageSize => 100;
         public override TimeSpan RateLimit => new TimeSpan(0);
 
-        private readonly ICached<DeezerUser> _userCache;
         private readonly IDeezerProxy _deezerProxy;
 
         public Deezer(ICacheManager cacheManager,
@@ -30,7 +29,6 @@ namespace NzbDrone.Core.Indexers.Deezer
             Logger logger)
             : base(httpClient, indexerStatusService, configService, parsingService, logger)
         {
-            _userCache = cacheManager.GetCache<DeezerUser>(typeof(DeezerProxy), "user");
             _deezerProxy = deezerProxy;
         }
 
@@ -45,10 +43,7 @@ namespace NzbDrone.Core.Indexers.Deezer
 
         public override IParseIndexerResponse GetParser()
         {
-            return new DeezerParser()
-            {
-                User = _userCache.Find(Settings.BaseUrl)
-            };
+            return new DeezerParser();
         }
     }
 }
