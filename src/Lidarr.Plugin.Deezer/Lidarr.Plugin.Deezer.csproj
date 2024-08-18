@@ -13,15 +13,20 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.11.63" />
     <PackageReference Include="SkiaSharp" Version="3.0.0-preview.4.1" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\Lidarr\src\NzbDrone.Core\Lidarr.Core.csproj">
-      <Private>false</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </ProjectReference>
-    <ProjectReference Include="..\Lidarr\src\NzbDrone.Common\Lidarr.Common.csproj">
-      <Private>false</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </ProjectReference>
+    <Reference Include="FluentValidation">
+      <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\Lidarr\FluentValidation.dll</HintPath>
+    </Reference>
+    <Reference Include="Lidarr.Common">
+      <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\Lidarr\Lidarr.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Lidarr.Core">
+      <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\Lidarr\Lidarr.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog">
+      <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\Lidarr\NLog.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Target Name="ZipOutputPath" AfterTargets="Publish">
     <ZipDirectory SourceDirectory="$(PublishDir)" DestinationFile="$(SolutionDir)\..\Lidarr.Plugin.Deezer.$(TargetFramework).zip" />
