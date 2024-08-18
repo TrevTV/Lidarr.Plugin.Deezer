@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using NLog;
 using NzbDrone.Common.Http;
 using NzbDrone.Core.IndexerSearch.Definitions;
+using NzbDrone.Plugin.Deezer;
 
 namespace NzbDrone.Core.Indexers.Deezer
 {
@@ -9,19 +11,20 @@ namespace NzbDrone.Core.Indexers.Deezer
     {
         private const int PageSize = 100;
         private const int MaxPages = 30;
-        public DeezerIndexerSettings Settings { get; set; }
-        public Logger Logger { get; set; }
+        public DeezerIndexerSettings? Settings { get; set; }
+        public Logger? Logger { get; set; }
 
         public virtual IndexerPageableRequestChain GetRecentRequests()
         {
             var pageableRequests = new IndexerPageableRequestChain();
 
-            var url = $"{Settings.BaseUrl.TrimEnd('/')}/api/newReleases";
+            // TODO: deemix seems to just return *all* of deezer's newest, so i'm not sure this is really needed
+            /*var url = $"{Settings.BaseUrl.TrimEnd('/')}/api/newReleases";
 
             pageableRequests.Add(new[]
             {
                 new IndexerRequest(url, HttpAccept.Json)
-            });
+            });*/
 
             return pageableRequests;
         }
@@ -50,8 +53,19 @@ namespace NzbDrone.Core.Indexers.Deezer
         {
             for (var page = 0; page < MaxPages; page++)
             {
-                var url = $"{Settings.BaseUrl.TrimEnd('/')}/api/album-search?term={searchParameters}&nb={PageSize}&start={page * PageSize}";
-                yield return new IndexerRequest(url, HttpAccept.Json);
+                JObject data = new()
+                {
+                    ["query"] = searchParameters,
+                    ["start"] = $"{page * PageSize}",
+                    ["nb"] = $"{PageSize}",
+                    ["output"] = "ALBUM",
+                    ["filter"] = "ALL",
+                };
+
+                var url = DeezerAPI.Instance!.GetGWUrl("search.music");
+                var req = new IndexerRequest(url, HttpAccept.Json); ;
+                req.HttpRequest.SetContent(data.ToString());
+                yield return req;
             }
         }
     }
