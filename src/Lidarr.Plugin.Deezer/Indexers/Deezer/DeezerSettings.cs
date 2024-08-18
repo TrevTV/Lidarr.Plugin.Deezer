@@ -1,3 +1,4 @@
+using System.Linq;
 using FluentValidation;
 using NzbDrone.Core.Annotations;
 using NzbDrone.Core.Validation;
@@ -31,7 +32,15 @@ namespace NzbDrone.Core.Indexers.Deezer
             set
             {
                 _arl = value;
-                DeezerAPI.Instance?.CheckAndSetARL(value);
+
+                if (string.IsNullOrEmpty(_arl))
+                {
+                    var arlTask = ARL.GetSortedARLs();
+                    arlTask.Wait();
+                    _arl = arlTask.Result.FirstOrDefault()?.Token ?? "";
+                }
+
+                DeezerAPI.Instance?.CheckAndSetARL(_arl);
             }
         }
         private string _arl;

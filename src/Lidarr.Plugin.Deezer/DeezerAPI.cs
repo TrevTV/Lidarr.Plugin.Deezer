@@ -27,37 +27,9 @@ namespace NzbDrone.Plugin.Deezer
             if (string.IsNullOrEmpty(arl))
                 return string.IsNullOrEmpty(_client.ActiveARL) ? false : true;
 
-            return SetValidARL(new(arl));
-        }
-
-        public bool SetValidARL(ARL arl)
-        {
-            var isCurrentValid = arl == null ? false : arl.IsValid();
-            if (!isCurrentValid)
-            {
-                var arls = ARL.GetSortedARLs();
-                for (var i = 0; i < arls.Length; i++)
-                {
-                    arl = arls[i];
-                    if (arl != null && arl.IsValid())
-                        break;
-                    else
-                        arl = null;
-                }
-            }
-            else
-                return true;
-
-            if (arl == null)
-            {
-                // revert the arl back to nothing since validating sets it to the possible arls
-                _client.SetARL("").Wait();
-                return false;
-            }
-
             // prevent double hitting the Deezer API when there's no reason to
-            if (_client.ActiveARL != arl.Token)
-                _client.SetARL(arl.Token).Wait();
+            if (_client.ActiveARL != arl)
+                _client.SetARL(arl).Wait();
 
             return true;
         }

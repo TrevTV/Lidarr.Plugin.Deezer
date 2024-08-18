@@ -155,9 +155,10 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         {
             if ((DateTime.Now - _lastARLValidityCheck).Minutes > 30)
             {
-                var safeToWork = DeezerAPI.Instance.CheckAndSetARL(DeezerAPI.Instance.Client.ActiveARL);
+                // TODO: validity check, not sure if this works as intended
+                /*var safeToWork = DeezerAPI.Instance.CheckAndSetARL(DeezerAPI.Instance.Client.ActiveARL);
                 if (!safeToWork)
-                    throw new InvalidARLException("No valid ARLs are available.");
+                    throw new InvalidARLException("No valid ARLs are available.");*/
             }
         }
 

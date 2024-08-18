@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
-using HtmlAgilityPack;
+using System.Net.Http;
+using System.Threading.Tasks;
+using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
+using AngleSharp.XPath;
 
 namespace NzbDrone.Plugin.Deezer
 {
@@ -14,14 +18,15 @@ namespace NzbDrone.Plugin.Deezer
 
         private const string FIREHAWK_URL = "https://rentry.org/firehawk52";
 
-        public static ARL[] GetSortedARLs()
+        public static async Task<ARL[]> GetSortedARLs()
         {
-            HtmlWeb web = new();
-            var loadTask = web.LoadFromWebAsync(FIREHAWK_URL);
-            loadTask.Wait();
-            var doc = loadTask.Result;
+            HttpClient client = new();
+            var html = await client.GetStringAsync(FIREHAWK_URL);
 
-            var tableNode = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[1]/div/div[2]/article/div/div[11]/table/tbody");
+            var parser = new HtmlParser();
+            var document = await parser.ParseDocumentAsync(html);
+
+            var tableNode = document.Body.SelectSingleNode("/html/body/div/div/div[2]/div[1]/div/div[2]/article/div/div[6]/table/tbody");
 
             if (tableNode == null)
             {
@@ -31,18 +36,22 @@ namespace NzbDrone.Plugin.Deezer
             List<ARL> arls = new();
             foreach (var row in tableNode.ChildNodes)
             {
-                if (row is HtmlTextNode)
-                    continue;
+                if (row is IElement elementRow)
+                {
+                    var countryElement = elementRow.QuerySelector("img");
+                    var country = countryElement?.GetAttribute("title") ?? "Unknown";
 
-                var country = row.SelectSingleNode("td[1]/span/img").GetAttributeValue("title", "Unknown");
+                    var slashIdx = country.IndexOf('/');
+                    if (slashIdx > 0)
+                        country = country[..slashIdx];
 
-                // removes any additional names of countries like Netherlands/Nederland, simpler to just use the first
-                var slashIdx = country.IndexOf('/');
-                if (slashIdx > 0)
-                    country = country[..slashIdx];
-
-                var token = row.SelectSingleNode("td[4]/code").InnerText;
-                arls.Add(new(token, country));
+                    var tokenElement = elementRow.QuerySelector("td:nth-child(4) code");
+                    var token = tokenElement?.TextContent;
+                    if (token != null)
+                    {
+                        arls.Add(new ARL(token, country));
+                    }
+                }
             }
 
             return arls.ToArray();
