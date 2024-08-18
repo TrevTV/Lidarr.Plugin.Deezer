@@ -9,10 +9,6 @@ namespace NzbDrone.Core.Indexers.Deezer
     {
         public DeezerIndexerSettingsValidator()
         {
-            // TODO: i don't really know how to do this but this should probably be done at some point
-            //
-            // if (!settings.AutoFindArl)
-            //      RuleFor(c => c.Arl).NotEmpty().Length(192);
         }
     }
 
@@ -25,7 +21,7 @@ namespace NzbDrone.Core.Indexers.Deezer
             Arl = "";
         }
 
-        [FieldDefinition(1, Label = "Arl", Type = FieldType.Textbox)]
+        [FieldDefinition(0, Label = "Arl", Type = FieldType.Textbox)]
         public string Arl
         {
             get
@@ -38,7 +34,7 @@ namespace NzbDrone.Core.Indexers.Deezer
             }
         }
 
-        [FieldDefinition(2, Type = FieldType.Number, Label = "Early Download Limit", Unit = "days", HelpText = "Time before release date Lidarr will download from this indexer, empty is no limit", Advanced = true)]
+        [FieldDefinition(1, Type = FieldType.Number, Label = "Early Download Limit", Unit = "days", HelpText = "Time before release date Lidarr will download from this indexer, empty is no limit", Advanced = true)]
         public int? EarlyReleaseLimit { get; set; }
 
         // this is hardcoded so this doesn't need to exist except that it's required by the interface

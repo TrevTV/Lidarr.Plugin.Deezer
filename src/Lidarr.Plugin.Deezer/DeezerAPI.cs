@@ -9,7 +9,7 @@ namespace NzbDrone.Plugin.Deezer
 {
     public class DeezerAPI
     {
-        public static DeezerAPI? Instance { get; private set; }
+        public static DeezerAPI Instance { get; private set; }
 
         internal DeezerAPI(string arl)
         {
@@ -21,7 +21,7 @@ namespace NzbDrone.Plugin.Deezer
 
         internal string _arl;
         internal string _apiToken;
-        private JToken? _activeUserData;
+        private JToken _activeUserData;
 
         internal void UpdateArl(string arl)
         {
@@ -39,7 +39,7 @@ namespace NzbDrone.Plugin.Deezer
 
         private JToken GetUserData() => Call("deezer.getUserData", needsArl: true);
 
-        private JToken Call(string method, JObject? args = null, Dictionary<string, string>? parameters = null, bool needsArl = false)
+        private JToken Call(string method, JObject args = null, Dictionary<string, string> parameters = null, bool needsArl = false)
         {
             parameters ??= [];
             parameters["api_version"] = "1.0";
@@ -96,7 +96,7 @@ namespace NzbDrone.Plugin.Deezer
             return json["results"]!;
         }
 
-        public string GetGWUrl(string method, Dictionary<string, string>? parameters = null)
+        public string GetGWUrl(string method, Dictionary<string, string> parameters = null)
         {
             parameters ??= [];
             parameters["api_version"] = "1.0";
@@ -115,7 +115,7 @@ namespace NzbDrone.Plugin.Deezer
             return stringBuilder.ToString();
         }
 
-        public string GetPublicUrl(string method, Dictionary<string, string>? parameters = null)
+        public string GetPublicUrl(string method, Dictionary<string, string> parameters = null)
         {
             parameters ??= [];
 

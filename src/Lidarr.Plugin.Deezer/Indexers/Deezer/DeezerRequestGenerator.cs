@@ -11,8 +11,8 @@ namespace NzbDrone.Core.Indexers.Deezer
     {
         private const int PageSize = 100;
         private const int MaxPages = 30;
-        public DeezerIndexerSettings? Settings { get; set; }
-        public Logger? Logger { get; set; }
+        public DeezerIndexerSettings Settings { get; set; }
+        public Logger Logger { get; set; }
 
         public virtual IndexerPageableRequestChain GetRecentRequests()
         {
