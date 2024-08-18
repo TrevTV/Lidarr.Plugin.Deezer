@@ -2,7 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>net6.0</TargetFrameworks>
+	  <LangVersion>latest</LangVersion>
+	  <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Remove="E:\Projects\GitHub\Lidarr.Plugin.Deezer\src\stylecop.json" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidarr\src\NzbDrone.Core\Lidarr.Core.csproj">
       <Private>false</Private>
@@ -14,9 +20,7 @@
     </ProjectReference>
   </ItemGroup>
   <Target Name="ZipOutputPath" AfterTargets="Publish">
-    <ZipDirectory
-        SourceDirectory="$(PublishDir)"
-        DestinationFile="$(SolutionDir)\..\Lidarr.Plugin.Deezer.$(TargetFramework).zip" />
+    <ZipDirectory SourceDirectory="$(PublishDir)" DestinationFile="$(SolutionDir)\..\Lidarr.Plugin.Deezer.$(TargetFramework).zip" />
   </Target>
 
 

@@ -93,18 +93,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <!-- Set up stylecop -->
-  <ItemGroup Condition="'$(LidarrProject)'=='true' and '$(EnableAnalyzers)'!='false'">
-    <!-- StyleCop analysis -->
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <AdditionalFiles Include="$(SolutionDir)stylecop.json" />
-  </ItemGroup>
-
 </Project>
