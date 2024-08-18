@@ -18,13 +18,38 @@ namespace NzbDrone.Core.Indexers.Deezer
         {
             var pageableRequests = new IndexerPageableRequestChain();
 
-            // TODO: deemix seems to just return *all* of deezer's newest, so i'm not sure this is really needed
-            /*var url = $"{Settings.BaseUrl.TrimEnd('/')}/api/newReleases";
+            Dictionary<string, string> data = new()
+            {
+                { "gateway_input", new JObject()
+                    {
+                        ["PAGE"] = "channels/explore",
+                        ["VERSION"] = "2.3",
+                        ["SUPPORT"] = new JObject()
+                        {
+                            ["grid"] = new JArray()
+                            {
+                                "channel",
+                                "album"
+                            },
+                            ["horizontal-grid"] = new JArray()
+                            {
+                                "album"
+                            }
+                        },
+                        ["LANG"] = "us"
+                    }.ToString(Newtonsoft.Json.Formatting.None)
+                }
+            };
+
+            var url = DeezerAPI.Instance!.GetGWUrl("page.get", data);
+            var req = new IndexerRequest(url, HttpAccept.Json);
+            req.HttpRequest.Method = System.Net.Http.HttpMethod.Post;
+            req.HttpRequest.Cookies.Add("sid", DeezerAPI.Instance.Client.SID);
 
             pageableRequests.Add(new[]
             {
-                new IndexerRequest(url, HttpAccept.Json)
-            });*/
+                req
+            });
 
             return pageableRequests;
         }
