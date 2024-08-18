@@ -37,13 +37,13 @@ namespace NzbDrone.Core.Indexers.Deezer
                 torrentInfos.Add(ToReleaseInfo(result, 1));
 
                 // MP3 320
-                if (/*DeezerAPI.Instance.Client.GWApi.ActiveUserData["OPTIONS"]!["web_hq"]!.Value<bool>()*/ true) // TODO: the checks were throwing a nullref, not sure why
+                if (DeezerAPI.Instance.Client.GWApi.ActiveUserData["USER"]!["OPTIONS"]!["web_hq"]!.Value<bool>())
                 {
                     torrentInfos.Add(ToReleaseInfo(result, 3));
                 }
 
                 // FLAC
-                if (/*DeezerAPI.Instance.Client.GWApi.ActiveUserData["OPTIONS"]!["web_lossless"]!.Value<bool>()*/ true)
+                if (DeezerAPI.Instance.Client.GWApi.ActiveUserData["USER"]!["OPTIONS"]!["web_lossless"]!.Value<bool>())
                 {
                     torrentInfos.Add(ToReleaseInfo(result, 9));
                 }
