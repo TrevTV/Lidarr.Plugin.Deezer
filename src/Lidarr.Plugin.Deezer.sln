@@ -7,6 +7,20 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lidarr.Plugin.Deezer", "Lid
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{26D0C62E-1003-46DB-A2E0-3DF7D75BCAA1}"
 EndProject
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "Lidarr.Console", "..\..\Lidarr\_artifacts\win-x64\net6.0\Lidarr\Lidarr.Console.exe", "{04F6B3DE-C567-4323-B451-23F19F9D1E44}"
+	ProjectSection(DebuggerProjectSystem) = preProject
+		PortSupplier = 00000000-0000-0000-0000-000000000000
+		Executable = E:\Projects\GitHub\Lidarr\_artifacts\win-x64\net6.0\Lidarr\Lidarr.Console.exe
+		RemoteMachine = DESKTOP-V8L78GV
+		StartingDirectory = E:\Projects\GitHub\Lidarr\_artifacts\win-x64\net6.0\Lidarr
+		Environment = Default
+		LaunchingEngine = 00000000-0000-0000-0000-000000000000
+		UseLegacyDebugEngines = No
+		LaunchSQLEngine = No
+		AttachLaunchAction = No
+		IORedirection = Auto
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +43,12 @@ Global
 		{03AEA254-BEB0-4848-891E-3F8F9DDD3F56}.Release|x64.Build.0 = Release|Any CPU
 		{03AEA254-BEB0-4848-891E-3F8F9DDD3F56}.Release|x86.ActiveCfg = Release|Any CPU
 		{03AEA254-BEB0-4848-891E-3F8F9DDD3F56}.Release|x86.Build.0 = Release|Any CPU
+		{04F6B3DE-C567-4323-B451-23F19F9D1E44}.Debug|Any CPU.ActiveCfg = Release|x64
+		{04F6B3DE-C567-4323-B451-23F19F9D1E44}.Debug|x64.ActiveCfg = Release|x64
+		{04F6B3DE-C567-4323-B451-23F19F9D1E44}.Debug|x86.ActiveCfg = Release|x64
+		{04F6B3DE-C567-4323-B451-23F19F9D1E44}.Release|Any CPU.ActiveCfg = Release|x64
+		{04F6B3DE-C567-4323-B451-23F19F9D1E44}.Release|x64.ActiveCfg = Release|x64
+		{04F6B3DE-C567-4323-B451-23F19F9D1E44}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
