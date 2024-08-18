@@ -64,7 +64,9 @@ namespace NzbDrone.Core.Indexers.Deezer
 
                 var url = DeezerAPI.Instance!.GetGWUrl("search.music");
                 var req = new IndexerRequest(url, HttpAccept.Json); ;
-                req.HttpRequest.SetContent(data.ToString());
+                req.HttpRequest.SetContent(data.ToString(Newtonsoft.Json.Formatting.None));
+                req.HttpRequest.Method = System.Net.Http.HttpMethod.Post;
+                req.HttpRequest.Cookies.Add("sid", DeezerAPI.Instance.Client.SID);
                 yield return req;
             }
         }
