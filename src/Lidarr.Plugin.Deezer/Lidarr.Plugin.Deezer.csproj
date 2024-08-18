@@ -17,15 +17,19 @@
   <ItemGroup>
     <Reference Include="FluentValidation">
       <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\Lidarr\FluentValidation.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Lidarr.Common">
       <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\Lidarr\Lidarr.Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Lidarr.Core">
       <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\Lidarr\Lidarr.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="NLog">
       <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\Lidarr\NLog.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <Target Name="ZipOutputPath" AfterTargets="Publish">
