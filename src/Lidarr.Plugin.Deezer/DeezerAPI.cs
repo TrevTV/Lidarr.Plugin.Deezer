@@ -16,7 +16,7 @@ namespace NzbDrone.Plugin.Deezer
         {
             Instance = this;
             _client = new();
-            UpdateArl(arl);
+            CheckAndSetARL(arl);
         }
 
         public DeezerClient Client => _client;
@@ -24,15 +24,9 @@ namespace NzbDrone.Plugin.Deezer
         private DeezerClient _client;
         private string _apiToken => _client.GWApi.ActiveUserData["checkForm"]!.ToString();
 
-        internal void UpdateArl(string arl)
+        internal bool CheckAndSetARL(string arl)
         {
-            if (string.IsNullOrEmpty(arl))
-            {
-                // TODO: this would be where to grab one from firehawk
-                return;
-            }
-
-            SetValidARL(new(arl));
+            return SetValidARL(new(arl));
         }
 
         public bool SetValidARL(ARL arl)

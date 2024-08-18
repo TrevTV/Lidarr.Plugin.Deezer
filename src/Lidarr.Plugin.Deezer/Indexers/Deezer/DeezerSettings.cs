@@ -30,7 +30,7 @@ namespace NzbDrone.Core.Indexers.Deezer
             }
             set
             {
-                DeezerAPI.Instance.UpdateArl(value);
+                DeezerAPI.Instance.CheckAndSetARL(value);
             }
         }
 

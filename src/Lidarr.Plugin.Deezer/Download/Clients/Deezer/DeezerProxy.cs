@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using DeezNET.Data;
 using NLog;
 using NzbDrone.Common.Cache;
 using NzbDrone.Common.Disk;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Common.Http;
 using NzbDrone.Common.Serializer;
+using NzbDrone.Core.Download.Clients.Deezer.Queue;
 using NzbDrone.Core.Indexers.Deezer;
 
 namespace NzbDrone.Core.Download.Clients.Deezer
@@ -21,50 +23,38 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
     public class DeezerProxy : IDeezerProxy
     {
-        private static readonly Dictionary<string, long> Bitrates = new Dictionary<string, long>
+        private static readonly Dictionary<Bitrate, long> Bitrates = new Dictionary<Bitrate, long>
         {
-            { "1", 128 },
-            { "3", 320 },
-            { "9", 1000 }
-        };
-        private static readonly Dictionary<string, string> Formats = new Dictionary<string, string>
-        {
-            { "1", "MP3 128" },
-            { "3", "MP3 320" },
-            { "9", "FLAC" }
+            { Bitrate.MP3_128, 128 },
+            { Bitrate.MP3_320, 320 },
+            { Bitrate.FLAC, 1000 }
         };
 
-        private readonly ICached<string> _sessionCookieCache;
         private readonly ICached<DateTime?> _startTimeCache;
-        private readonly ICached<DeezerUser> _userCache;
-        private readonly IHttpClient _httpClient;
+        private readonly DownloadTaskQueue _taskQueue;
         private readonly Logger _logger;
 
         private double _bytesPerSecond = 0;
 
         public DeezerProxy(ICacheManager cacheManager,
-            IHttpClient httpClient,
+            DeezerSettings deezerSettings,
             Logger logger)
         {
-            _sessionCookieCache = cacheManager.GetCache<string>(GetType(), "sessionCookies");
             _startTimeCache = cacheManager.GetCache<DateTime?>(GetType(), "startTimes");
-            _userCache = cacheManager.GetCache<DeezerUser>(GetType(), "user");
-            _httpClient = httpClient;
+            _taskQueue = new(500, deezerSettings);
             _logger = logger;
+
+            _taskQueue.StartQueueHandler();
         }
 
         public List<DownloadClientItem> GetQueue(DeezerSettings settings)
         {
-            // TODO: write queue system
+            var listing = _taskQueue.GetQueueListing();
+            var completed = listing.Where(x => x.Status == DownloadItemStatus.Completed);
+            var queue = listing.Where(x => x.Status == DownloadItemStatus.Queued);
+            var current = listing.Where(x => x.Status == DownloadItemStatus.Downloading);
 
-            /*var request = BuildRequest(settings).Resource("/api/getQueue");
-            var response = ProcessRequest<DeezerQueue>(request);
-
-            var completed = response.Queue.Values.Where(x => x.Status == "completed");
-            var queue = response.Queue.Values.Where(x => x.Status == "inQueue").OrderBy(x => response.QueueOrder.IndexOf(x.Id));
-            var current = response.Current;
-
-            var result = completed.Concat(new[] { current }).Concat(queue).Where(x => x != null).Select(ToDownloadClientItem).ToList();
+            var result = completed.Concat(current).Concat(queue).Where(x => x != null).Select(ToDownloadClientItem).ToList();
 
             var currentItem = result.FirstOrDefault(x => x.Status == DownloadItemStatus.Downloading);
 
@@ -82,112 +72,63 @@ namespace NzbDrone.Core.Download.Clients.Deezer
                 }
             }
 
-            return result;*/
-            return [];
+            return result;
         }
 
         public void RemoveFromQueue(string downloadId, DeezerSettings settings)
         {
-            // TODO: write queue system
-
-            /*var request = BuildRequest(settings)
-                .Resource("/api/removeFromQueue")
-                .Post()
-                .AddQueryParam("uuid", downloadId);
-
-            ProcessRequest(request);*/
+            try
+            {
+                _taskQueue.RemoveItem(_taskQueue.GetQueueListing().First(a => a.ID == downloadId));
+            }
+            catch { }
         }
 
         public string Download(string url, int bitrate, DeezerSettings settings)
         {
-            // TODO: write download system
-
-            /*Authenticate(settings);
-
-            var request = BuildRequest(settings)
-                .Resource("/api/addToQueue")
-                .Post()
-                .AddFormParameter("url", url)
-                .AddFormParameter("bitrate", bitrate);
-
-            var response = ProcessRequest<DeezerResult<DeezerAddResult>>(request);
-
-            if (response.Result)
-            {
-                if (response.Data.Obj.Count != 1)
-                {
-                    throw new DownloadClientException("Expected Deezer to add 1 item, got {0}", response.Data.Obj.Count);
-                }
-
-                _logger.Trace("Downloading item {0}", response.Data.Obj[0].Uuid);
-                return response.Data.Obj[0].Uuid;
-            }
-
-            throw new DownloadClientException("Error adding item to Deezer: {0}", response.Errid);*/
-            return "";
+            var fromTask = DownloadItem.From(url, (Bitrate)bitrate);
+            fromTask.Wait();
+            var downloadItem = fromTask.Result;
+            _taskQueue.QueueBackgroundWorkItemAsync(downloadItem).AsTask().Wait();
+            return downloadItem.ID;
         }
 
-        private DownloadClientItem ToDownloadClientItem(DeezerQueueItem x)
+        private DownloadClientItem ToDownloadClientItem(DownloadItem x)
         {
-            var title = $"{x.Artist} - {x.Title} [WEB] {Formats[x.Bitrate]}";
+            var title = $"{x.Artist} - {x.Title} [WEB] {x.Bitrate}";
             if (x.Explicit)
             {
                 title += " [Explicit]";
             }
 
             // assume 3 mins per track, bitrates in kbps
-            var size = x.Size * 180L * Bitrates[x.Bitrate] * 128L;
+            var size = x.TrackCount * 180L * Bitrates[x.Bitrate] * 128L;
 
             var item = new DownloadClientItem
             {
-                DownloadId = x.Uuid,
+                DownloadId = x.ID,
                 Title = title,
                 TotalSize = size,
-                RemainingSize = (long)((1 - (x.Progress / 100.0)) * size),
+                RemainingSize = (long)((1 - x.Progress) * size),
                 RemainingTime = GetRemainingTime(x, size),
-                Status = GetItemStatus(x),
+                Status = x.Status,
                 CanMoveFiles = true,
                 CanBeRemoved = true
             };
 
-            if (x.ExtrasPath.IsNotNullOrWhiteSpace())
+            if (x.DownloadFolder.IsNotNullOrWhiteSpace())
             {
-                item.OutputPath = new OsPath(x.ExtrasPath);
+                item.OutputPath = new OsPath(x.DownloadFolder);
             }
 
             return item;
         }
 
-        private static DownloadItemStatus GetItemStatus(DeezerQueueItem item)
+        private TimeSpan? GetRemainingTime(DownloadItem x, long size)
         {
-            if (item.Failed > 0)
+            if (x.Progress == 1)
             {
-                return DownloadItemStatus.Failed;
-            }
-
-            if (item.Status == "inQueue")
-            {
-                return DownloadItemStatus.Queued;
-            }
-
-            if (item.Status == "completed")
-            {
-                return DownloadItemStatus.Completed;
-            }
-
-            if (item.Progress is > 0 and < 100)
-            {
-                return DownloadItemStatus.Downloading;
-            }
-
-            return DownloadItemStatus.Queued;
-        }
-
-        private TimeSpan? GetRemainingTime(DeezerQueueItem x, long size)
-        {
-            if (x.Progress == 100)
-            {
-                _startTimeCache.Remove(x.Id);
+                _startTimeCache.Remove(x.ID);
                 return null;
             }
 
@@ -196,16 +137,16 @@ namespace NzbDrone.Core.Download.Clients.Deezer
                 return null;
             }
 
-            var started = _startTimeCache.Find(x.Id);
+            var started = _startTimeCache.Find(x.ID);
             if (started == null)
             {
                 started = DateTime.UtcNow;
-                _startTimeCache.Set(x.Id, started);
+                _startTimeCache.Set(x.ID, started);
                 return null;
             }
 
             var elapsed = DateTime.UtcNow - started;
-            var progress = Math.Min(x.Progress, 100) / 100.0;
+            var progress = Math.Min(x.Progress, 1);
 
             _bytesPerSecond = (progress * size) / elapsed.Value.TotalSeconds;
 
