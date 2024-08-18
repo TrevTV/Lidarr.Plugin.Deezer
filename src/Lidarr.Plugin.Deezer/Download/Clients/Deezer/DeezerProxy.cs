@@ -1,23 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
+using System.Threading.Tasks;
 using DeezNET.Data;
 using NLog;
 using NzbDrone.Common.Cache;
 using NzbDrone.Common.Disk;
 using NzbDrone.Common.Extensions;
-using NzbDrone.Common.Http;
-using NzbDrone.Common.Serializer;
 using NzbDrone.Core.Download.Clients.Deezer.Queue;
-using NzbDrone.Core.Indexers.Deezer;
 
 namespace NzbDrone.Core.Download.Clients.Deezer
 {
     public interface IDeezerProxy
     {
         List<DownloadClientItem> GetQueue(DeezerSettings settings);
-        string Download(string url, int bitrate, DeezerSettings settings);
+        Task<string> Download(string url, int bitrate, DeezerSettings settings);
         void RemoveFromQueue(string downloadId, DeezerSettings settings);
     }
 
@@ -84,12 +81,10 @@ namespace NzbDrone.Core.Download.Clients.Deezer
             catch { }
         }
 
-        public string Download(string url, int bitrate, DeezerSettings settings)
+        public async Task<string> Download(string url, int bitrate, DeezerSettings settings)
         {
-            var fromTask = DownloadItem.From(url, (Bitrate)bitrate);
-            fromTask.Wait();
-            var downloadItem = fromTask.Result;
-            _taskQueue.QueueBackgroundWorkItemAsync(downloadItem).AsTask().Wait();
+            var downloadItem = await DownloadItem.From(url, (Bitrate)bitrate);
+            await _taskQueue.QueueBackgroundWorkItemAsync(downloadItem);
             return downloadItem.ID;
         }
 

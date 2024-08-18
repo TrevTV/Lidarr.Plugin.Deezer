@@ -74,7 +74,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
                 bitrate = 1;
             }
 
-            return Task.FromResult(_proxy.Download(release.DownloadUrl, bitrate, Settings));
+            return _proxy.Download(release.DownloadUrl, bitrate, Settings);
         }
 
         public override DownloadClientInfo GetStatus()
