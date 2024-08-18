@@ -34,7 +34,7 @@ namespace NzbDrone.Core.Indexers.Deezer
             _deezerProxy = deezerProxy;
 
             // is a singleton
-            var deezerAPI = new DeezerAPI(Settings.Arl);
+            var deezerAPI = new DeezerAPI("");
         }
 
         public override IIndexerRequestGenerator GetRequestGenerator()

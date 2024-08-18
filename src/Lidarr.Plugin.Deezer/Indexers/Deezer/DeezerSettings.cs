@@ -26,13 +26,15 @@ namespace NzbDrone.Core.Indexers.Deezer
         {
             get
             {
-                return DeezerAPI.Instance.Client.ActiveARL;
+                return _arl;
             }
             set
             {
-                DeezerAPI.Instance.CheckAndSetARL(value);
+                _arl = value;
+                DeezerAPI.Instance?.CheckAndSetARL(value);
             }
         }
+        private string _arl;
 
         [FieldDefinition(1, Type = FieldType.Number, Label = "Early Download Limit", Unit = "days", HelpText = "Time before release date Lidarr will download from this indexer, empty is no limit", Advanced = true)]
         public int? EarlyReleaseLimit { get; set; }

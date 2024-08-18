@@ -2,7 +2,7 @@ using FluentValidation;
 using NzbDrone.Core.Annotations;
 using NzbDrone.Core.ThingiProvider;
 using NzbDrone.Core.Validation;
-using NzbDrone.Plugin.Deezer;
+using NzbDrone.Core.Validation.Paths;
 
 namespace NzbDrone.Core.Download.Clients.Deezer
 {
@@ -10,6 +10,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
     {
         public DeezerSettingsValidator()
         {
+            RuleFor(x => x.DownloadPath).IsValidPath();
         }
     }
 
@@ -19,23 +20,10 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
         public DeezerSettings()
         {
-            Arl = "";
+            DownloadPath = "";
         }
 
-        [FieldDefinition(0, Label = "Arl", Type = FieldType.Textbox)]
-        public string Arl
-        {
-            get
-            {
-                return DeezerAPI.Instance.Client.ActiveARL;
-            }
-            set
-            {
-                DeezerAPI.Instance.CheckAndSetARL(value);
-            }
-        }
-
-        [FieldDefinition(1, Label = "Download Path", Type = FieldType.Textbox)]
+        [FieldDefinition(0, Label = "Download Path", Type = FieldType.Textbox)]
         public string DownloadPath { get; set; }
 
         public NzbDroneValidationResult Validate()

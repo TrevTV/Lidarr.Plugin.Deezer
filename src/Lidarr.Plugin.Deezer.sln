@@ -5,11 +5,7 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lidarr.Plugin.Deezer", "Lidarr.Plugin.Deezer\Lidarr.Plugin.Deezer.csproj", "{03AEA254-BEB0-4848-891E-3F8F9DDD3F56}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lidarr.Core", "Lidarr\src\NzbDrone.Core\Lidarr.Core.csproj", "{EDACD46D-D846-41B7-853E-51503BE34D63}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{26D0C62E-1003-46DB-A2E0-3DF7D75BCAA1}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lidarr.Common", "Lidarr\src\NzbDrone.Common\Lidarr.Common.csproj", "{00EACEAE-601E-460A-B89D-67908A247E1C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,30 +29,6 @@ Global
 		{03AEA254-BEB0-4848-891E-3F8F9DDD3F56}.Release|x64.Build.0 = Release|Any CPU
 		{03AEA254-BEB0-4848-891E-3F8F9DDD3F56}.Release|x86.ActiveCfg = Release|Any CPU
 		{03AEA254-BEB0-4848-891E-3F8F9DDD3F56}.Release|x86.Build.0 = Release|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Debug|x64.Build.0 = Debug|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Debug|x86.Build.0 = Debug|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Release|x64.ActiveCfg = Release|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Release|x64.Build.0 = Release|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Release|x86.ActiveCfg = Release|Any CPU
-		{EDACD46D-D846-41B7-853E-51503BE34D63}.Release|x86.Build.0 = Release|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Debug|x64.Build.0 = Debug|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Debug|x86.Build.0 = Debug|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Release|x64.ActiveCfg = Release|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Release|x64.Build.0 = Release|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Release|x86.ActiveCfg = Release|Any CPU
-		{00EACEAE-601E-460A-B89D-67908A247E1C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
