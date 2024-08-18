@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DeezNET;
@@ -66,7 +67,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
         private int _downloadedTracks;
         private int _failedTracks;
-        private List<(long, string)> _downloadedFiles = [];
+        private List<(long, string)> _downloadedFiles = new();
 
         private string _downloadFolder = "";
 
@@ -77,13 +78,13 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         private static DateTime _lastARLValidityCheck = DateTime.MinValue;
 
         private const string CDN_TEMPLATE = "https://e-cdn-images.dzcdn.net/images/cover/{0}/{1}x{1}-000000-80-0-0.jpg";
-        private readonly byte[] FLAC_MAGIC = "fLaC"u8.ToArray();
+        private readonly byte[] FLAC_MAGIC = Encoding.ASCII.GetBytes("fLaC");
 
         public async Task DoDownload(DeezerSettings settings, CancellationToken cancellation = default)
         {
             _tracks ??= await _deezerUrl.GetAssociatedTracks(DeezerAPI.Instance.Client, token: cancellation);
 
-            List<Task> tasks = [];
+            List<Task> tasks = new();
             using SemaphoreSlim semaphore = new(3, 3);
             foreach (var track in _tracks)
             {

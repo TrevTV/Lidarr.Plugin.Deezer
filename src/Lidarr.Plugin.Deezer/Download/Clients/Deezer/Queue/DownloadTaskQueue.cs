@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Channels;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 {
@@ -12,7 +13,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         private readonly List<DownloadItem> _items;
         private readonly Dictionary<DownloadItem, CancellationTokenSource> _cancellationSources;
 
-        private readonly List<Task> _runningTasks = [];
+        private readonly List<Task> _runningTasks = new();
         private readonly object _lock = new();
 
         private DeezerSettings _settings;
@@ -24,8 +25,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
                 FullMode = BoundedChannelFullMode.Wait
             };
             _queue = Channel.CreateBounded<DownloadItem>(options);
-            _items = [];
-            _cancellationSources = [];
+            _items = new();
+            _cancellationSources = new();
             _settings = settings;
         }
 
@@ -75,7 +76,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
             List<Task> remainingTasks;
             lock (_lock)
-                remainingTasks = [.. _runningTasks];
+                remainingTasks = _runningTasks.ToList();
             await Task.WhenAll(remainingTasks).ConfigureAwait(true);
         }
 
@@ -108,7 +109,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
         public DownloadItem[] GetQueueListing()
         {
-            return [.. _items];
+            return _items.ToArray();
         }
 
         public CancellationToken GetTokenForItem(DownloadItem item)

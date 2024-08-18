@@ -63,7 +63,7 @@ namespace NzbDrone.Plugin.Deezer
 
         public string GetGWUrl(string method, Dictionary<string, string> parameters = null)
         {
-            parameters ??= [];
+            parameters ??= new();
             parameters["api_version"] = "1.0";
             parameters["api_token"] = _apiToken;
             parameters["input"] = "3";
@@ -82,7 +82,7 @@ namespace NzbDrone.Plugin.Deezer
 
         public string GetPublicUrl(string method, Dictionary<string, string> parameters = null)
         {
-            parameters ??= [];
+            parameters ??= new();
 
             StringBuilder stringBuilder = new("https://api.deezer.com/" + method);
             for (var i = 0; i < parameters.Count; i++)

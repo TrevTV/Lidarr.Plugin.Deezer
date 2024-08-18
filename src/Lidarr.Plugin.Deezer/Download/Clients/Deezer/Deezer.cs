@@ -82,7 +82,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer
             return new DownloadClientInfo
             {
                 IsLocalhost = false,
-                OutputRootFolders = [/* TODO: need to get the lidarr download path here, idk how */]
+                // TODO: no clue how this remapping thing works so hopefully it's correct enough
+                OutputRootFolders = new() { _remotePathMappingService.RemapRemoteToLocal("127.0.0.1", new OsPath(Settings.DownloadPath)) }
             };
         }
 

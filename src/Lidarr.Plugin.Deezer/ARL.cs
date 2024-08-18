@@ -1,10 +1,17 @@
+using System;
 using System.Collections.Generic;
 using HtmlAgilityPack;
 
 namespace NzbDrone.Plugin.Deezer
 {
-    public class ARL(string token, string country = "")
+    public class ARL
     {
+        public ARL(string token, string country = "")
+        {
+            Token = token;
+            Country = country;
+        }
+
         private const string FIREHAWK_URL = "https://rentry.org/firehawk52";
 
         public static ARL[] GetSortedARLs()
@@ -18,10 +25,10 @@ namespace NzbDrone.Plugin.Deezer
 
             if (tableNode == null)
             {
-                return [];
+                return Array.Empty<ARL>();
             }
 
-            List<ARL> arls = [];
+            List<ARL> arls = new();
             foreach (var row in tableNode.ChildNodes)
             {
                 if (row is HtmlTextNode)
@@ -38,7 +45,7 @@ namespace NzbDrone.Plugin.Deezer
                 arls.Add(new(token, country));
             }
 
-            return [.. arls];
+            return arls.ToArray();
         }
 
         public bool IsValid()
@@ -63,7 +70,7 @@ namespace NzbDrone.Plugin.Deezer
             return true;
         }
 
-        public string Token { get; init; } = token;
-        public string Country { get; init; } = country;
+        public string Token { get; init; }
+        public string Country { get; init; }
     }
 }
