@@ -38,7 +38,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
             Logger logger)
         {
             _startTimeCache = cacheManager.GetCache<DateTime?>(GetType(), "startTimes");
-            _taskQueue = new(500, deezerSettings);
+            _taskQueue = new(500, deezerSettings, logger);
             _logger = logger;
 
             _taskQueue.StartQueueHandler();

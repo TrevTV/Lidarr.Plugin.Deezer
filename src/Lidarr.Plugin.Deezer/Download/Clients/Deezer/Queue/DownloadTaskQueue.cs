@@ -71,7 +71,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
                 var item = await DequeueAsync(stoppingToken).ConfigureAwait(true);
                 var token = GetTokenForItem(item);
-                var downloadTask = item.DoDownload(_settings, token);
+                var downloadTask = item.DoDownload(_settings, _logger, token);
 
                 lock (_lock)
                     _runningTasks.Add(HandleTask(item, downloadTask));
