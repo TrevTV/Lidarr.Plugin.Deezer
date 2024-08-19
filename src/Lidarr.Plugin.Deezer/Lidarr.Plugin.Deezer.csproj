@@ -43,7 +43,7 @@
     <ZipDirectory SourceDirectory="$(PublishDir)" DestinationFile="$(SolutionDir)\..\Lidarr.Plugin.Deezer.$(TargetFramework).zip" />
   </Target>
 	
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Target Name="PostBuild" AfterTargets="ILRepacker">
     <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;C:\ProgramData\Lidarr\plugins\TrevTV\Lidarr.Plugin.Deezer&quot;" />
   </Target>
 

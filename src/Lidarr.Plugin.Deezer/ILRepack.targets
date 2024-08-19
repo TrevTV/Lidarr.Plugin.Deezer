@@ -9,6 +9,7 @@
 			<InputAssemblies Include="$(OutputPath)\DeezNET.dll" />
 			<InputAssemblies Include="$(OutputPath)\SkiaSharp.dll" />
 			<InputAssemblies Include="$(OutputPath)\TagLibSharp.dll" />
+			<InputAssemblies Include="$(OutputPath)\BouncyCastle.Cryptography.dll" />
 		</ItemGroup>
 
         <ILRepack
