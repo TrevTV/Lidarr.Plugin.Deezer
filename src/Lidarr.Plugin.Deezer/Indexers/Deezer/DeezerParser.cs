@@ -32,6 +32,12 @@ namespace NzbDrone.Core.Indexers.Deezer
 
             foreach (var result in jsonResponse.Data)
             {
+                // TODO: this makes things a lot slower, should make it an option
+                var albumPage = DeezerAPI.Instance.Client.GWApi.GetAlbumPage(long.Parse(result.AlbumId)).GetAwaiter().GetResult();
+                var missing = albumPage["SONGS"]!["data"]!.Count(d => d["FILESIZE"]!.ToString() == "0");
+                if (missing > 0)
+                    return torrentInfos; // empty
+
                 // MP3 128
                 torrentInfos.Add(ToReleaseInfo(result, 1));
 

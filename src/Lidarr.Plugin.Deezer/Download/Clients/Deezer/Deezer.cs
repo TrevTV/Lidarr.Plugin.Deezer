@@ -80,9 +80,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer
         {
             return new DownloadClientInfo
             {
-                IsLocalhost = false,
-                // TODO: no clue how this remapping thing works so hopefully it's correct enough
-                OutputRootFolders = new() { _remotePathMappingService.RemapRemoteToLocal("127.0.0.1", new OsPath(Settings.DownloadPath)) }
+                IsLocalhost = true,
+                OutputRootFolders = new() { new OsPath(Settings.DownloadPath) }
             };
         }
 

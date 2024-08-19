@@ -112,7 +112,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
                 RemainingTime = GetRemainingTime(x, size),
                 Status = x.Status,
                 CanMoveFiles = true,
-                CanBeRemoved = true
+                CanBeRemoved = true,
             };
 
             if (x.DownloadFolder.IsNotNullOrWhiteSpace())
