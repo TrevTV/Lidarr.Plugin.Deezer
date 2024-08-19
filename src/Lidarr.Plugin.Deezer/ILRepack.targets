@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- ILRepack -->
+    <Target Name="ILRepacker" AfterTargets="Build">
+        <ItemGroup>
+			<InputAssemblies Include="$(OutputPath)\Lidarr.Plugin.Deezer.dll" />
+			<InputAssemblies Include="$(OutputPath)\AngleSharp.dll" />
+			<InputAssemblies Include="$(OutputPath)\AngleSharp.XPath.dll" />
+			<InputAssemblies Include="$(OutputPath)\DeezNET.dll" />
+			<InputAssemblies Include="$(OutputPath)\SkiaSharp.dll" />
+			<InputAssemblies Include="$(OutputPath)\TagLibSharp.dll" />
+		</ItemGroup>
+
+        <ILRepack
+            Parallel="true"
+            Internalize="true"
+            InputAssemblies="@(InputAssemblies)"
+            TargetKind="Dll"
+            LibraryPath="..\..\..\Lidarr\_artifacts\win-x64\net6.0\old\Lidarr\"
+            OutputFile="$(OutputPath)\$(AssemblyName).dll"
+        />
+    </Target>
+    <!-- /ILRepack -->
+</Project>
