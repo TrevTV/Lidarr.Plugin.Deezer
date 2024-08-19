@@ -26,12 +26,16 @@ namespace NzbDrone.Plugin.Deezer
             var parser = new HtmlParser();
             var document = await parser.ParseDocumentAsync(html);
 
-            var tableNode = document.Body.SelectSingleNode("/html/body/div/div/div[2]/div[1]/div/div[2]/article/div/div[6]/table/tbody");
+            var deezerTitleNode = (IElement)document.Body.SelectSingleNode("//*[@id=\"deezer-arls\"]");
+
+            IElement tableNode = deezerTitleNode.NextElementSibling;
+            while (tableNode != null && tableNode.GetAttribute("class") != "ntable-wrapper")
+                tableNode = tableNode.NextElementSibling;
 
             if (tableNode == null)
-            {
                 return Array.Empty<ARL>();
-            }
+            else
+                tableNode = (IElement)tableNode.SelectSingleNode("table/tbody");
 
             List<ARL> arls = new();
             foreach (var row in tableNode.ChildNodes)
