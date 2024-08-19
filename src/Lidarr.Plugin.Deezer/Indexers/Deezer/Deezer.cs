@@ -5,7 +5,6 @@ using NzbDrone.Common.Http;
 using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Download.Clients.Deezer;
 using NzbDrone.Core.Parser;
-using NzbDrone.Plugin.Deezer;
 
 namespace NzbDrone.Core.Indexers.Deezer
 {

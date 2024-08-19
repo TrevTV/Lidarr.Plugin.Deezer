@@ -28,17 +28,15 @@ namespace NzbDrone.Core.Download.Clients.Deezer
         };
 
         private readonly ICached<DateTime?> _startTimeCache;
-        private readonly DownloadTaskQueue _taskQueue;
         private readonly Logger _logger;
+        private DownloadTaskQueue _taskQueue;
 
         private double _bytesPerSecond = 0;
 
-        public DeezerProxy(ICacheManager cacheManager,
-            DeezerSettings deezerSettings,
-            Logger logger)
+        public DeezerProxy(ICacheManager cacheManager, Logger logger)
         {
             _startTimeCache = cacheManager.GetCache<DateTime?>(GetType(), "startTimes");
-            _taskQueue = new(500, deezerSettings, logger);
+            _taskQueue = new(500, null, _logger);
             _logger = logger;
 
             _taskQueue.StartQueueHandler();
@@ -46,6 +44,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
         public List<DownloadClientItem> GetQueue(DeezerSettings settings)
         {
+            _taskQueue.SetSettings(settings);
+
             var listing = _taskQueue.GetQueueListing();
             var completed = listing.Where(x => x.Status == DownloadItemStatus.Completed);
             var queue = listing.Where(x => x.Status == DownloadItemStatus.Queued);
@@ -74,6 +74,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
         public void RemoveFromQueue(string downloadId, DeezerSettings settings)
         {
+            _taskQueue.SetSettings(settings);
+
             try
             {
                 _taskQueue.RemoveItem(_taskQueue.GetQueueListing().First(a => a.ID == downloadId));
@@ -83,6 +85,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
         public async Task<string> Download(string url, int bitrate, DeezerSettings settings)
         {
+            _taskQueue.SetSettings(settings);
+
             var downloadItem = await DownloadItem.From(url, (Bitrate)bitrate);
             await _taskQueue.QueueBackgroundWorkItemAsync(downloadItem);
             return downloadItem.ID;

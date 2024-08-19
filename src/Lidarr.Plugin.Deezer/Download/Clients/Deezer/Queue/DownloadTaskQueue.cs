@@ -33,6 +33,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
             _logger = logger;
         }
 
+        public void SetSettings(DeezerSettings settings) => _settings = settings;
+
         public void StartQueueHandler()
         {
             Task.Run(() => BackgroundProcessing());
