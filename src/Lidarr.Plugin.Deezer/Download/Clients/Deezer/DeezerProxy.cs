@@ -31,8 +31,6 @@ namespace NzbDrone.Core.Download.Clients.Deezer
         private readonly Logger _logger;
         private DownloadTaskQueue _taskQueue;
 
-        private double _bytesPerSecond = 0;
-
         public DeezerProxy(ICacheManager cacheManager, Logger logger)
         {
             _startTimeCache = cacheManager.GetCache<DateTime?>(GetType(), "startTimes");
@@ -52,22 +50,6 @@ namespace NzbDrone.Core.Download.Clients.Deezer
             var current = listing.Where(x => x.Status == DownloadItemStatus.Downloading);
 
             var result = completed.Concat(current).Concat(queue).Where(x => x != null).Select(ToDownloadClientItem).ToList();
-
-            var currentItem = result.FirstOrDefault(x => x.Status == DownloadItemStatus.Downloading);
-
-            if (currentItem != null && currentItem.RemainingTime.HasValue)
-            {
-                var remainingTime = currentItem.RemainingTime.Value;
-
-                foreach (var item in result)
-                {
-                    if (item.Status == DownloadItemStatus.Queued)
-                    {
-                        remainingTime += TimeSpan.FromSeconds(item.TotalSize / _bytesPerSecond);
-                        item.RemainingTime = remainingTime;
-                    }
-                }
-            }
 
             return result;
         }
@@ -109,7 +91,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
                 Title = title,
                 TotalSize = size,
                 RemainingSize = (long)((1 - x.Progress) * size),
-                RemainingTime = GetRemainingTime(x, size),
+                RemainingTime = GetRemainingTime(x),
                 Status = x.Status,
                 CanMoveFiles = true,
                 CanBeRemoved = true,
@@ -123,9 +105,9 @@ namespace NzbDrone.Core.Download.Clients.Deezer
             return item;
         }
 
-        private TimeSpan? GetRemainingTime(DownloadItem x, long size)
+        private TimeSpan? GetRemainingTime(DownloadItem x)
         {
-            if (x.Progress == 1)
+            if (x.Status == DownloadItemStatus.Completed)
             {
                 _startTimeCache.Remove(x.ID);
                 return null;
@@ -146,8 +128,6 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
             var elapsed = DateTime.UtcNow - started;
             var progress = Math.Min(x.Progress, 1);
-
-            _bytesPerSecond = (progress * size) / elapsed.Value.TotalSeconds;
 
             return TimeSpan.FromTicks((long)(elapsed.Value.Ticks * (1 - progress) / progress));
         }

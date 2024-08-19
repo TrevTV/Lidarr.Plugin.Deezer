@@ -51,7 +51,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         public Bitrate Bitrate { get; private set; }
         public DownloadItemStatus Status { get; set; }
 
-        public float Progress { get => DownloadedTracks / TrackCount; }
+        public float Progress { get => DownloadedTracks / (float)TrackCount; }
         public int TrackCount { get; private set; }
         public int DownloadedTracks { get; private set; }
         public int FailedTracks { get; private set; }
