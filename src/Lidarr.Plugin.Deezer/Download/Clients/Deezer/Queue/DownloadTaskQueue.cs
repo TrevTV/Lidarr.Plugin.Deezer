@@ -18,7 +18,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         private readonly object _lock = new();
 
         private DeezerSettings _settings;
-        private Logger _logger;
+        private readonly Logger _logger;
 
         public DownloadTaskQueue(int capacity, DeezerSettings settings, Logger logger)
         {
@@ -51,7 +51,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
                     var token = GetTokenForItem(item);
                     item.EnsureValidity();
                     item.Status = DownloadItemStatus.Downloading;
-                    await task.ConfigureAwait(true);
+                    await task;
                 }
                 catch (TaskCanceledException) { }
                 catch (OperationCanceledException) { }
@@ -69,9 +69,9 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                await semaphore.WaitAsync(stoppingToken).ConfigureAwait(true);
+                await semaphore.WaitAsync(stoppingToken);
 
-                var item = await DequeueAsync(stoppingToken).ConfigureAwait(true);
+                var item = await DequeueAsync(stoppingToken);
                 var token = GetTokenForItem(item);
                 var downloadTask = item.DoDownload(_settings, _logger, token);
 
@@ -82,13 +82,11 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
             List<Task> remainingTasks;
             lock (_lock)
                 remainingTasks = _runningTasks.ToList();
-            await Task.WhenAll(remainingTasks).ConfigureAwait(true);
+            await Task.WhenAll(remainingTasks);
         }
 
         public async ValueTask QueueBackgroundWorkItemAsync(DownloadItem workItem)
         {
-            ArgumentNullException.ThrowIfNull(workItem);
-
             await _queue.Writer.WriteAsync(workItem);
             CancellationTokenSource token = new();
             _items.Add(workItem);

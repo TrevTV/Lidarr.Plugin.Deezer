@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -61,27 +62,26 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         private (long id, long size)[] _tracks;
         private DeezerURL _deezerUrl;
         private JToken _deezerAlbum;
-        private DateTime _lastARLValidityCheck = DateTime.MinValue;
+        private readonly DateTime _lastARLValidityCheck = DateTime.MinValue;
 
         public async Task DoDownload(DeezerSettings settings, Logger logger, CancellationToken cancellation = default)
         {
             List<Task> tasks = new();
             using SemaphoreSlim semaphore = new(3, 3);
-            foreach (var track in _tracks)
+            foreach (var (trackId, trackSize) in _tracks)
             {
                 tasks.Add(Task.Run(async () =>
                 {
                     await semaphore.WaitAsync(cancellation);
-
                     try
                     {
-                        await DoTrackDownload(track.id, settings, cancellation);
-                        DownloadedSize += track.size;
+                        await DoTrackDownload(trackId, settings, cancellation);
+                        DownloadedSize += trackSize;
                     }
                     catch (TaskCanceledException) { }
                     catch (Exception ex)
                     {
-                        logger.Error("Error while downloading Deezer track " + track.id);
+                        logger.Error("Error while downloading Deezer track " + trackId);
                         logger.Error(ex.ToString());
                         FailedTracks++;
                     }
@@ -101,15 +101,15 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
         private async Task DoTrackDownload(long track, DeezerSettings settings, CancellationToken cancellation = default)
         {
-            JToken page = await DeezerAPI.Instance.Client.GWApi.GetTrackPage(track, cancellation);
-            string songTitle = page["DATA"]!["SNG_TITLE"]!.ToString();
-            string artistName = page["DATA"]!["ART_NAME"]!.ToString();
-            string albumTitle = page["DATA"]!["ALB_TITLE"]!.ToString();
-            int duration = page["DATA"]!["DURATION"]!.Value<int>();
+            var page = await DeezerAPI.Instance.Client.GWApi.GetTrackPage(track, cancellation);
+            var songTitle = page["DATA"]!["SNG_TITLE"]!.ToString();
+            var artistName = page["DATA"]!["ART_NAME"]!.ToString();
+            var albumTitle = page["DATA"]!["ALB_TITLE"]!.ToString();
+            var duration = page["DATA"]!["DURATION"]!.Value<int>();
 
-            string ext = Bitrate == Bitrate.FLAC ? "flac" : "mp3";
-            string outPath = Path.Combine(settings.DownloadPath, MetadataUtilities.GetFilledTemplate("%albumartist%/%album%/", ext, page, _deezerAlbum), MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", ext, page, _deezerAlbum));
-            string outDir = Path.GetDirectoryName(outPath)!;
+            var ext = Bitrate == Bitrate.FLAC ? "flac" : "mp3";
+            var outPath = Path.Combine(settings.DownloadPath, MetadataUtilities.GetFilledTemplate("%albumartist%/%album%/", ext, page, _deezerAlbum), MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", ext, page, _deezerAlbum));
+            var outDir = Path.GetDirectoryName(outPath)!;
 
             DownloadFolder = outDir;
             if (!Directory.Exists(outDir))
@@ -117,10 +117,10 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
             await DeezerAPI.Instance.Client.Downloader.WriteRawTrackToFile(track, outPath, Bitrate, null, cancellation);
 
-            string plainLyrics = string.Empty;
+            var plainLyrics = string.Empty;
             List<SyncLyrics> syncLyrics = null;
 
-            var lyrics = await DeezerAPI.Instance.Client.Downloader.FetchLyricsFromDeezer(track);
+            var lyrics = await DeezerAPI.Instance.Client.Downloader.FetchLyricsFromDeezer(track, cancellation);
             if (lyrics.HasValue)
             {
                 plainLyrics = lyrics.Value.plainLyrics;
@@ -131,7 +131,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
             if (settings.UseLRCLIB && (string.IsNullOrWhiteSpace(plainLyrics) || (settings.SaveSyncedLyrics && !(syncLyrics?.Any() ?? false))))
             {
-                lyrics = await DeezerAPI.Instance.Client.Downloader.FetchLyricsFromLRCLIB("lrclib.net", songTitle, artistName, albumTitle, duration);
+                lyrics = await DeezerAPI.Instance.Client.Downloader.FetchLyricsFromLRCLIB("lrclib.net", songTitle, artistName, albumTitle, duration, cancellation);
                 if (lyrics.HasValue)
                 {
                     if (string.IsNullOrWhiteSpace(plainLyrics))
@@ -178,7 +178,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
             var albumPage = await DeezerAPI.Instance.Client.GWApi.GetAlbumPage(_deezerUrl.Id, cancellation);
 
-            string filesizeKey = Bitrate switch
+            var filesizeKey = Bitrate switch
             {
                 Bitrate.MP3_128 => "FILESIZE_MP3_128",
                 Bitrate.MP3_320 => "FILESIZE_MP3_320",
@@ -197,15 +197,13 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
             TotalSize = _tracks.Sum(t => t.size);
         }
 
-        private async Task CreateLrcFile(string lrcFilePath, List<SyncLyrics> syncLyrics)
+        private static async Task CreateLrcFile(string lrcFilePath, List<SyncLyrics> syncLyrics)
         {
             StringBuilder lrcContent = new();
             foreach (var lyric in syncLyrics)
             {
                 if (!string.IsNullOrEmpty(lyric.LrcTimestamp) && !string.IsNullOrEmpty(lyric.Line))
-                {
-                    lrcContent.AppendLine($"{lyric.LrcTimestamp} {lyric.Line}");
-                }
+                    lrcContent.AppendLine(CultureInfo.InvariantCulture, $"{lyric.LrcTimestamp} {lyric.Line}");
             }
             await File.WriteAllTextAsync(lrcFilePath, lrcContent.ToString());
         }

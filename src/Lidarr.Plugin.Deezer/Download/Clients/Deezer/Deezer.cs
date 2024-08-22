@@ -47,9 +47,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
         public override void RemoveItem(DownloadClientItem item, bool deleteData)
         {
             if (deleteData)
-            {
                 DeleteItemData(item);
-            }
 
             _proxy.RemoveFromQueue(item.DownloadId, Settings);
         }
@@ -96,7 +94,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
             {
                 DeezerAPI.Instance.Client.GWApi.GetArtist(145).Wait();
             }
-            catch (Exception)
+            catch
             {
                 return new NzbDroneValidationFailure(string.Empty, "Could not login to Deezer. Invalid ARL?")
                 {

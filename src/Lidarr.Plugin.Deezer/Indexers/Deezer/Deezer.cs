@@ -19,8 +19,7 @@ namespace NzbDrone.Core.Indexers.Deezer
 
         private readonly IDeezerProxy _deezerProxy;
 
-        public Deezer(ICacheManager cacheManager,
-            IDeezerProxy deezerProxy,
+        public Deezer(IDeezerProxy deezerProxy,
             IHttpClient httpClient,
             IIndexerStatusService indexerStatusService,
             IConfigService configService,

@@ -9,14 +9,13 @@ using NzbDrone.Core.Download.Clients.Deezer;
 using NzbDrone.Core.Parser.Model;
 using System.Collections.Concurrent;
 using NzbDrone.Plugin.Deezer;
+using System.Globalization;
 
 namespace NzbDrone.Core.Indexers.Deezer
 {
     public class DeezerParser : IParseIndexerResponse
     {
         public DeezerIndexerSettings Settings { get; set; }
-
-        private static readonly int[] _bitrates = new[] { 1, 3, 9 };
 
         public IList<ReleaseInfo> ParseResponse(IndexerResponse response)
         {
@@ -51,7 +50,7 @@ namespace NzbDrone.Core.Indexers.Deezer
         {
             var torrentInfos = new List<ReleaseInfo>();
 
-            var albumPage = await DeezerAPI.Instance.Client.GWApi.GetAlbumPage(long.Parse(result.AlbumId));
+            var albumPage = await DeezerAPI.Instance.Client.GWApi.GetAlbumPage(long.Parse(result.AlbumId, CultureInfo.InvariantCulture));
 
             var missing = albumPage["SONGS"]!["data"]!.Count(d => d["FILESIZE"]!.ToString() == "0");
             if (Settings.HideAlbumsWithMissing && missing > 0)
@@ -94,7 +93,7 @@ namespace NzbDrone.Core.Indexers.Deezer
                 year = publishDate.Year;
             }
 
-            string url = $"https://deezer.com/album/{x.AlbumId}";
+            var url = $"https://deezer.com/album/{x.AlbumId}";
 
             var result = new ReleaseInfo
             {
@@ -196,7 +195,7 @@ namespace NzbDrone.Core.Indexers.Deezer
                     dataArray.Add(data);
                     albumCount++;
                 }
-            })).ConfigureAwait(true);
+            }));
 
             baseObj.Add("data", dataArray);
             baseObj.Add("total", albumCount);
@@ -209,7 +208,7 @@ namespace NzbDrone.Core.Indexers.Deezer
             var channelData = await DeezerAPI.Instance.Client.GWApi.GetPage(channelName);
             Regex regex = new("New.*releases");
 
-            JObject newReleasesSection = (JObject)channelData["sections"]!.FirstOrDefault(s => regex.IsMatch(s["title"]!.ToString()))!;
+            var newReleasesSection = (JObject)channelData["sections"]!.FirstOrDefault(s => regex.IsMatch(s["title"]!.ToString()))!;
             if (newReleasesSection == null)
                 return Array.Empty<JToken>();
 

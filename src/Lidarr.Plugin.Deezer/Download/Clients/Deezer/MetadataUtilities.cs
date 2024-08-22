@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -6,11 +7,11 @@ using Newtonsoft.Json.Linq;
 
 namespace NzbDrone.Core.Download.Clients.Deezer
 {
-    public static class MetadataUtilities
+    internal static class MetadataUtilities
     {
         public static string GetFilledTemplate(string template, string ext, JToken deezerPage, JToken deezerAlbumPage)
         {
-            DateTime releaseDate = DateTime.Parse(deezerPage["DATA"]!["PHYSICAL_RELEASE_DATE"]!.ToString());
+            var releaseDate = DateTime.Parse(deezerPage["DATA"]!["PHYSICAL_RELEASE_DATE"]!.ToString(), CultureInfo.InvariantCulture);
             return GetFilledTemplate_Internal(template,
                 deezerPage["DATA"]!["SNG_TITLE"]!.ToString(),
                 deezerPage["DATA"]!["ALB_TITLE"]!.ToString(),
@@ -20,7 +21,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
                 deezerPage["DATA"]!["ARTISTS"]!.Select(a => a["ART_NAME"]!.ToString()).ToArray(),
                 $"{(int)deezerPage["DATA"]!["TRACK_NUMBER"]!:00}",
                 deezerAlbumPage["SONGS"]!["total"]!.ToString(),
-                releaseDate.Year.ToString(),
+                releaseDate.Year.ToString(CultureInfo.InvariantCulture),
                 ext);
         }
 
@@ -48,10 +49,10 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
         public static string CleanPath(string str)
         {
-            char[] invalid = Path.GetInvalidFileNameChars();
-            for (int i = 0; i < invalid.Length; i++)
+            var invalid = Path.GetInvalidFileNameChars();
+            for (var i = 0; i < invalid.Length; i++)
             {
-                char c = invalid[i];
+                var c = invalid[i];
                 str = str.Replace(c, '_');
             }
             return str;

@@ -20,22 +20,13 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
     public class DeezerProxy : IDeezerProxy
     {
-        private static readonly Dictionary<Bitrate, long> Bitrates = new Dictionary<Bitrate, long>
-        {
-            { Bitrate.MP3_128, 128 },
-            { Bitrate.MP3_320, 320 },
-            { Bitrate.FLAC, 1000 }
-        };
-
         private readonly ICached<DateTime?> _startTimeCache;
-        private readonly Logger _logger;
-        private DownloadTaskQueue _taskQueue;
+        private readonly DownloadTaskQueue _taskQueue;
 
         public DeezerProxy(ICacheManager cacheManager, Logger logger)
         {
             _startTimeCache = cacheManager.GetCache<DateTime?>(GetType(), "startTimes");
             _taskQueue = new(500, null, logger);
-            _logger = logger;
 
             _taskQueue.StartQueueHandler();
         }
@@ -58,11 +49,9 @@ namespace NzbDrone.Core.Download.Clients.Deezer
         {
             _taskQueue.SetSettings(settings);
 
-            try
-            {
-                _taskQueue.RemoveItem(_taskQueue.GetQueueListing().First(a => a.ID == downloadId));
-            }
-            catch { }
+            var item = _taskQueue.GetQueueListing().FirstOrDefault(a => a.ID == downloadId);
+            if (item != null)
+                _taskQueue.RemoveItem(item);
         }
 
         public async Task<string> Download(string url, int bitrate, DeezerSettings settings)
