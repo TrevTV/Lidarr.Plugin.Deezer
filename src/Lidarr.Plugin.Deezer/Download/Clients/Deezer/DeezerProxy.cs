@@ -82,15 +82,12 @@ namespace NzbDrone.Core.Download.Clients.Deezer
                 title += " [Explicit]";
             }
 
-            // assume 3 mins per track, bitrates in kbps
-            var size = x.TrackCount * 180L * Bitrates[x.Bitrate] * 128L;
-
             var item = new DownloadClientItem
             {
                 DownloadId = x.ID,
                 Title = title,
-                TotalSize = size,
-                RemainingSize = (long)((1 - x.Progress) * size),
+                TotalSize = x.TotalSize,
+                RemainingSize = x.TotalSize - x.DownloadedSize,
                 RemainingTime = GetRemainingTime(x),
                 Status = x.Status,
                 CanMoveFiles = true,

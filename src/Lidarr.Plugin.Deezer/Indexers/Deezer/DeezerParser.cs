@@ -51,31 +51,34 @@ namespace NzbDrone.Core.Indexers.Deezer
 
             var albumPage = await DeezerAPI.Instance.Client.GWApi.GetAlbumPage(long.Parse(result.AlbumId));
 
+            // TODO: make this optional
             var missing = albumPage["SONGS"]!["data"]!.Count(d => d["FILESIZE"]!.ToString() == "0");
             if (missing > 0)
                 return null; // return null if missing any tracks
 
-            // TODO: deezer's api supplies the exact file sizes, if we pass that into ToReleaseInfo it show accurate sizing rather than a guesstimate
+            var size128 = albumPage["SONGS"]!["data"]!.Sum(d => d["FILESIZE_MP3_128"]!.Value<long>());
+            var size320 = albumPage["SONGS"]!["data"]!.Sum(d => d["FILESIZE_MP3_320"]!.Value<long>());
+            var sizeFlac = albumPage["SONGS"]!["data"]!.Sum(d => d["FILESIZE_FLAC"]!.Value<long>());
 
             // MP3 128
-            torrentInfos.Add(ToReleaseInfo(result, 1));
+            torrentInfos.Add(ToReleaseInfo(result, 1, size128));
 
             // MP3 320
             if (DeezerAPI.Instance.Client.GWApi.ActiveUserData["USER"]!["OPTIONS"]!["web_hq"]!.Value<bool>())
             {
-                torrentInfos.Add(ToReleaseInfo(result, 3));
+                torrentInfos.Add(ToReleaseInfo(result, 3, size320));
             }
 
             // FLAC
             if (DeezerAPI.Instance.Client.GWApi.ActiveUserData["USER"]!["OPTIONS"]!["web_lossless"]!.Value<bool>())
             {
-                torrentInfos.Add(ToReleaseInfo(result, 9));
+                torrentInfos.Add(ToReleaseInfo(result, 9, sizeFlac));
             }
 
             return torrentInfos;
         }
 
-        private static ReleaseInfo ToReleaseInfo(DeezerGwAlbum x, int bitrate)
+        private static ReleaseInfo ToReleaseInfo(DeezerGwAlbum x, int bitrate, long size)
         {
             var publishDate = DateTime.UtcNow;
             var year = 0;
@@ -103,24 +106,20 @@ namespace NzbDrone.Core.Indexers.Deezer
                 DownloadProtocol = nameof(DeezerDownloadProtocol)
             };
 
-            long actualBitrate;
             string format;
             switch (bitrate)
             {
                 case 9:
-                    actualBitrate = 1000;
                     result.Codec = "FLAC";
                     result.Container = "Lossless";
                     format = "FLAC";
                     break;
                 case 3:
-                    actualBitrate = 320;
                     result.Codec = "MP3";
                     result.Container = "320";
                     format = "MP3 320";
                     break;
                 case 1:
-                    actualBitrate = 128;
                     result.Codec = "MP3";
                     result.Container = "128";
                     format = "MP3 128";
@@ -129,8 +128,7 @@ namespace NzbDrone.Core.Indexers.Deezer
                     throw new NotImplementedException();
             }
 
-            // bitrate is in kbit/sec, 128 = 1024/8; assuming 3 minutes per track
-            result.Size = int.Parse(x.TrackCount) * 3 * 60 * actualBitrate * 128L;
+            result.Size = size;
             result.Title = $"{x.ArtistName} - {x.AlbumTitle}";
 
             if (year > 0)

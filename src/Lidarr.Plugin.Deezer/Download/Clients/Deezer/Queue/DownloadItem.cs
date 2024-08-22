@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,12 +52,13 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         public Bitrate Bitrate { get; private set; }
         public DownloadItemStatus Status { get; set; }
 
-        public float Progress { get => DownloadedTracks / (float)TrackCount; }
-        public int TrackCount { get; private set; }
-        public int DownloadedTracks { get; private set; }
+        public float Progress { get => DownloadedSize / (float)Math.Max(TotalSize, 1); }
+        public long DownloadedSize { get; private set; }
+        public long TotalSize { get; private set; }
+
         public int FailedTracks { get; private set; }
 
-        private long[] _tracks;
+        private (long id, long size)[] _tracks;
         private DeezerURL _deezerUrl;
         private DateTime _lastARLValidityCheck = DateTime.MinValue;
 
@@ -74,8 +76,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
                     try
                     {
-                        await DoTrackDownload(track, settings, cancellation);
-                        DownloadedTracks++;
+                        await DoTrackDownload(track.id, settings, cancellation);
+                        DownloadedSize += track.size;
                     }
                     catch (TaskCanceledException) { }
                     catch (Exception ex)
@@ -145,15 +147,24 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
             if (_deezerUrl.EntityType != EntityType.Album)
                 throw new InvalidOperationException();
 
-            // TODO: deezer's api supplies the exact file sizes, if we cache that here it can be used later
+            var albumPage = await DeezerAPI.Instance.Client.GWApi.GetAlbumPage(_deezerUrl.Id, cancellation);
 
-            _tracks ??= await _deezerUrl.GetAssociatedTracks(DeezerAPI.Instance.Client, token: cancellation);
+            string filesizeKey = Bitrate switch
+            {
+                Bitrate.MP3_128 => "FILESIZE_MP3_128",
+                Bitrate.MP3_320 => "FILESIZE_MP3_320",
+                Bitrate.FLAC => "FILESIZE_FLAC",
+                _ => "FILESIZE"
+            };
 
-            var album = await DeezerAPI.Instance.Client.PublicApi.GetAlbum(_deezerUrl.Id, 0, -1, cancellation);
-            Title = album["title"].ToString();
-            Artist = album["artist"]["name"].ToString();
-            TrackCount = _tracks.Length;
-            Explicit = album["explicit_lyrics"]?.Value<bool>() ?? false;
+            _tracks ??= albumPage["SONGS"]!["data"]!.Select(t => (t["SNG_ID"]!.Value<long>(), t[filesizeKey]!.Value<long>())).ToArray();
+
+            var album = albumPage["DATA"]!.ToObject<DeezerGwAlbum>();
+
+            Title = album.AlbumTitle;
+            Artist = album.ArtistName;
+            Explicit = album.Explicit;
+            TotalSize = _tracks.Sum(t => t.size);
         }
     }
 }
