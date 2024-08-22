@@ -81,7 +81,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
                     catch (TaskCanceledException) { }
                     catch (Exception ex)
                     {
-                        logger.Error("Error while downloading Deezer track " + track, ex);
+                        logger.Error("Error while downloading Deezer track " + track.id);
+                        logger.Error(ex.ToString());
                         FailedTracks++;
                     }
                     finally

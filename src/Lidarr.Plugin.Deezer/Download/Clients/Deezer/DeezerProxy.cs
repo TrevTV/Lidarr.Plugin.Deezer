@@ -34,7 +34,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
         public DeezerProxy(ICacheManager cacheManager, Logger logger)
         {
             _startTimeCache = cacheManager.GetCache<DateTime?>(GetType(), "startTimes");
-            _taskQueue = new(500, null, _logger);
+            _taskQueue = new(500, null, logger);
             _logger = logger;
 
             _taskQueue.StartQueueHandler();
