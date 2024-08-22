@@ -14,6 +14,8 @@ namespace NzbDrone.Core.Indexers.Deezer
 {
     public class DeezerParser : IParseIndexerResponse
     {
+        public DeezerIndexerSettings Settings { get; set; }
+
         private static readonly int[] _bitrates = new[] { 1, 3, 9 };
 
         public IList<ReleaseInfo> ParseResponse(IndexerResponse response)
@@ -51,9 +53,8 @@ namespace NzbDrone.Core.Indexers.Deezer
 
             var albumPage = await DeezerAPI.Instance.Client.GWApi.GetAlbumPage(long.Parse(result.AlbumId));
 
-            // TODO: make this optional
             var missing = albumPage["SONGS"]!["data"]!.Count(d => d["FILESIZE"]!.ToString() == "0");
-            if (missing > 0)
+            if (Settings.HideAlbumsWithMissing && missing > 0)
                 return null; // return null if missing any tracks
 
             var size128 = albumPage["SONGS"]!["data"]!.Sum(d => d["FILESIZE_MP3_128"]!.Value<long>());

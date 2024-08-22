@@ -124,20 +124,18 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
             {
                 plainLyrics = lyrics.Value.plainLyrics;
 
-                if (true) // TODO: lrc setting
+                if (settings.SaveSyncedLyrics)
                     syncLyrics = lyrics.Value.syncLyrics;
             }
 
-            // TODO: use lrclib setting                                              synclrc setting
-            if (true                   && (string.IsNullOrWhiteSpace(plainLyrics) || (true           && !(syncLyrics?.Any() ?? false))))
+            if (settings.UseLRCLIB && (string.IsNullOrWhiteSpace(plainLyrics) || (settings.SaveSyncedLyrics && !(syncLyrics?.Any() ?? false))))
             {
                 lyrics = await DeezerAPI.Instance.Client.Downloader.FetchLyricsFromLRCLIB("lrclib.net", songTitle, artistName, albumTitle, duration);
                 if (lyrics.HasValue)
                 {
                     if (string.IsNullOrWhiteSpace(plainLyrics))
                         plainLyrics = lyrics.Value.plainLyrics;
-                    //  synclrc setting
-                    if (true           && !(syncLyrics?.Any() ?? false))
+                    if (settings.SaveSyncedLyrics && !(syncLyrics?.Any() ?? false))
                         syncLyrics = lyrics.Value.syncLyrics;
                 }
             }

@@ -45,11 +45,16 @@ namespace NzbDrone.Core.Indexers.Deezer
         }
         private string _arl;
 
-        [FieldDefinition(1, Type = FieldType.Number, Label = "Early Download Limit", Unit = "days", HelpText = "Time before release date Lidarr will download from this indexer, empty is no limit", Advanced = true)]
+
+
+        [FieldDefinition(1, Label = "Hide Albums With Missing Tracks", HelpText = "If an album has any unavailable tracks on Deezer, they will not be provided when searching.", Type = FieldType.Checkbox)]
+        public bool HideAlbumsWithMissing { get; set; } = true;
+
+        [FieldDefinition(2, Type = FieldType.Number, Label = "Early Download Limit", Unit = "days", HelpText = "Time before release date Lidarr will download from this indexer, empty is no limit", Advanced = true)]
         public int? EarlyReleaseLimit { get; set; }
 
         // this is hardcoded so this doesn't need to exist except that it's required by the interface
-        public string BaseUrl { get => "https://api.deezer.com/"; set => _ = value; }
+        public string BaseUrl { get; set; } = "";
 
         public NzbDroneValidationResult Validate()
         {

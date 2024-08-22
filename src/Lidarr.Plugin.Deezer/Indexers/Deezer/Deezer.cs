@@ -42,7 +42,10 @@ namespace NzbDrone.Core.Indexers.Deezer
 
         public override IParseIndexerResponse GetParser()
         {
-            return new DeezerParser();
+            return new DeezerParser()
+            {
+                Settings = Settings
+            };
         }
     }
 }
