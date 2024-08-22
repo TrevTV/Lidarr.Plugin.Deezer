@@ -8,13 +8,14 @@ using NzbDrone.Common.Cache;
 using NzbDrone.Common.Disk;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Download.Clients.Deezer.Queue;
+using NzbDrone.Core.Parser.Model;
 
 namespace NzbDrone.Core.Download.Clients.Deezer
 {
     public interface IDeezerProxy
     {
         List<DownloadClientItem> GetQueue(DeezerSettings settings);
-        Task<string> Download(string url, int bitrate, DeezerSettings settings);
+        Task<string> Download(RemoteAlbum remoteAlbum, DeezerSettings settings);
         void RemoveFromQueue(string downloadId, DeezerSettings settings);
     }
 
@@ -54,11 +55,11 @@ namespace NzbDrone.Core.Download.Clients.Deezer
                 _taskQueue.RemoveItem(item);
         }
 
-        public async Task<string> Download(string url, int bitrate, DeezerSettings settings)
+        public async Task<string> Download(RemoteAlbum remoteAlbum, DeezerSettings settings)
         {
             _taskQueue.SetSettings(settings);
 
-            var downloadItem = await DownloadItem.From(url, (Bitrate)bitrate);
+            var downloadItem = await DownloadItem.From(remoteAlbum);
             await _taskQueue.QueueBackgroundWorkItemAsync(downloadItem);
             return downloadItem.ID;
         }

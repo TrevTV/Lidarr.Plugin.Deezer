@@ -12,15 +12,24 @@ using DeezNET.Data;
 using DeezNET.Exceptions;
 using Newtonsoft.Json.Linq;
 using NLog;
+using NzbDrone.Core.Parser.Model;
 using NzbDrone.Plugin.Deezer;
 
 namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 {
     public class DownloadItem
     {
-        public static async Task<DownloadItem> From(string url, Bitrate bitrate)
+        public static async Task<DownloadItem> From(RemoteAlbum remoteAlbum)
         {
-            url = url.Trim();
+            string url = remoteAlbum.Release.DownloadUrl.Trim();
+            Bitrate bitrate;
+
+            if (remoteAlbum.Release.Codec == "FLAC")
+                bitrate = Bitrate.FLAC;
+            else if (remoteAlbum.Release.Container == "320")
+                bitrate = Bitrate.MP3_320;
+            else
+                bitrate = Bitrate.MP3_128;
 
             DownloadItem item = null;
             if (url.Contains("deezer", StringComparison.CurrentCultureIgnoreCase))
@@ -32,6 +41,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
                         ID = Guid.NewGuid().ToString(),
                         Status = DownloadItemStatus.Queued,
                         Bitrate = bitrate,
+                        RemoteAlbum = remoteAlbum,
                         _deezerUrl = deezerUrl,
                     };
 
@@ -47,6 +57,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         public string Title { get; private set; }
         public string Artist { get; private set; }
         public bool Explicit { get; private set; }
+
+        public RemoteAlbum RemoteAlbum {  get; private set; }
 
         public string DownloadFolder { get; private set; }
 

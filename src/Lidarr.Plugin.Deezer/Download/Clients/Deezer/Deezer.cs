@@ -54,24 +54,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
         public override Task<string> Download(RemoteAlbum remoteAlbum, IIndexer indexer)
         {
-            var release = remoteAlbum.Release;
-
-            int bitrate;
-
-            if (release.Codec == "FLAC")
-            {
-                bitrate = 9;
-            }
-            else if (release.Container == "320")
-            {
-                bitrate = 3;
-            }
-            else
-            {
-                bitrate = 1;
-            }
-
-            return _proxy.Download(release.DownloadUrl, bitrate, Settings);
+            return _proxy.Download(remoteAlbum, Settings);
         }
 
         public override DownloadClientInfo GetStatus()
