@@ -60,9 +60,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
         private (long id, long size)[] _tracks;
         private DeezerURL _deezerUrl;
+        private JToken _deezerAlbum;
         private DateTime _lastARLValidityCheck = DateTime.MinValue;
-
-        private readonly byte[] FLAC_MAGIC = Encoding.ASCII.GetBytes("fLaC");
 
         public async Task DoDownload(DeezerSettings settings, Logger logger, CancellationToken cancellation = default)
         {
@@ -102,33 +101,64 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         private async Task DoTrackDownload(long track, DeezerSettings settings, CancellationToken cancellation = default)
         {
             JToken page = await DeezerAPI.Instance.Client.GWApi.GetTrackPage(track, cancellation);
+            string songTitle = page["DATA"]!["SNG_TITLE"]!.ToString();
+            string artistName = page["DATA"]!["ART_NAME"]!.ToString();
+            string albumTitle = page["DATA"]!["ALB_TITLE"]!.ToString();
+            int duration = page["DATA"]!["DURATION"]!.Value<int>();
 
-            JToken albumPage = await DeezerAPI.Instance.Client.GWApi.GetAlbumPage(page["DATA"]!["ALB_ID"]!.Value<long>(), cancellation);
+            string ext = Bitrate == Bitrate.FLAC ? "flac" : "mp3";
+            string outPath = Path.Combine(settings.DownloadPath, MetadataUtilities.GetFilledTemplate("%albumartist%/%album%/", ext, page, _deezerAlbum), MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", ext, page, _deezerAlbum));
+            string outDir = Path.GetDirectoryName(outPath)!;
 
-            byte[] trackData = await DeezerAPI.Instance.Client.Downloader.GetRawTrackBytes(track, Bitrate, null, cancellation);
-            string extension = Enumerable.SequenceEqual(trackData[0..4], FLAC_MAGIC) ? "flac" : "mp3";
+            DownloadFolder = outDir;
+            if (!Directory.Exists(outDir))
+                Directory.CreateDirectory(outDir);
 
-            trackData = await DeezerAPI.Instance.Client.Downloader.ApplyMetadataToTrackBytes(track, trackData, token: cancellation);
+            await DeezerAPI.Instance.Client.Downloader.WriteRawTrackToFile(track, outPath, Bitrate, null, cancellation);
 
-            string outPath = Path.Combine(settings.DownloadPath, MetadataUtilities.GetFilledTemplate("%albumartist%/%album%/", extension, page, albumPage));
-            DownloadFolder = outPath;
-            if (!Directory.Exists(outPath))
-                Directory.CreateDirectory(outPath);
+            string plainLyrics = string.Empty;
+            List<SyncLyrics> syncLyrics = null;
 
-            try
+            var lyrics = await DeezerAPI.Instance.Client.Downloader.FetchLyricsFromDeezer(track);
+            if (lyrics.HasValue)
             {
-                string artOut = Path.Combine(outPath, "folder.jpg");
+                plainLyrics = lyrics.Value.plainLyrics;
+
+                if (true) // TODO: lrc setting
+                    syncLyrics = lyrics.Value.syncLyrics;
+            }
+
+            // TODO: use lrclib setting                                              synclrc setting
+            if (true                   && (string.IsNullOrWhiteSpace(plainLyrics) || (true           && !(syncLyrics?.Any() ?? false))))
+            {
+                lyrics = await DeezerAPI.Instance.Client.Downloader.FetchLyricsFromLRCLIB("lrclib.net", songTitle, artistName, albumTitle, duration);
+                if (lyrics.HasValue)
+                {
+                    if (string.IsNullOrWhiteSpace(plainLyrics))
+                        plainLyrics = lyrics.Value.plainLyrics;
+                    //  synclrc setting
+                    if (true           && !(syncLyrics?.Any() ?? false))
+                        syncLyrics = lyrics.Value.syncLyrics;
+                }
+            }
+
+            await DeezerAPI.Instance.Client.Downloader.ApplyMetadataToFile(track, outPath, 512, plainLyrics, token: cancellation);
+
+            if (syncLyrics != null)
+                await CreateLrcFile(Path.Combine(outDir, MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", "lrc", page, _deezerAlbum)), syncLyrics);
+
+            // TODO: this is currently a waste of resources, if this pr ever gets merged, it can be reenabled
+            // https://github.com/Lidarr/Lidarr/pull/4370
+            /* try
+            {
+                string artOut = Path.Combine(outDir, "folder.jpg");
                 if (!File.Exists(artOut))
                 {
                     byte[] bigArt = await DeezerAPI.Instance.Client.Downloader.GetArtBytes(page["DATA"]!["ALB_PICTURE"]!.ToString(), 1024, cancellation);
                     await File.WriteAllBytesAsync(artOut, bigArt, cancellation);
                 }
             }
-            catch (UnavailableArtException) { }
-
-            outPath = Path.Combine(outPath, MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", extension, page, albumPage));
-
-            await File.WriteAllBytesAsync(outPath, trackData, cancellation);
+            catch (UnavailableArtException) { } */
         }
 
         public void EnsureValidity()
@@ -158,6 +188,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
             };
 
             _tracks ??= albumPage["SONGS"]!["data"]!.Select(t => (t["SNG_ID"]!.Value<long>(), t[filesizeKey]!.Value<long>())).ToArray();
+            _deezerAlbum = albumPage;
 
             var album = albumPage["DATA"]!.ToObject<DeezerGwAlbum>();
 
@@ -165,6 +196,19 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
             Artist = album.ArtistName;
             Explicit = album.Explicit;
             TotalSize = _tracks.Sum(t => t.size);
+        }
+
+        private async Task CreateLrcFile(string lrcFilePath, List<SyncLyrics> syncLyrics)
+        {
+            StringBuilder lrcContent = new();
+            foreach (var lyric in syncLyrics)
+            {
+                if (!string.IsNullOrEmpty(lyric.LrcTimestamp) && !string.IsNullOrEmpty(lyric.Line))
+                {
+                    lrcContent.AppendLine($"{lyric.LrcTimestamp} {lyric.Line}");
+                }
+            }
+            await File.WriteAllTextAsync(lrcFilePath, lrcContent.ToString());
         }
     }
 }
