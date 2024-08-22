@@ -145,6 +145,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
             if (_deezerUrl.EntityType != EntityType.Album)
                 throw new InvalidOperationException();
 
+            // TODO: deezer's api supplies the exact file sizes, if we cache that here it can be used later
+
             _tracks ??= await _deezerUrl.GetAssociatedTracks(DeezerAPI.Instance.Client, token: cancellation);
 
             var album = await DeezerAPI.Instance.Client.PublicApi.GetAlbum(_deezerUrl.Id, 0, -1, cancellation);

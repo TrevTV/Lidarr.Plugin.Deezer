@@ -30,35 +30,49 @@ namespace NzbDrone.Core.Indexers.Deezer
             else
                 jsonResponse = new HttpResponse<DeezerSearchResponseWrapper>(response.HttpResponse).Resource.Results;
 
-            foreach (var result in jsonResponse.Data)
+            var tasks = jsonResponse.Data.Select(result => ProcessResultAsync(result)).ToArray();
+
+            Task.WaitAll(tasks);
+
+            foreach (var task in tasks)
             {
-                // TODO: this makes things a lot slower, should make it an option
-                var albumPage = DeezerAPI.Instance.Client.GWApi.GetAlbumPage(long.Parse(result.AlbumId)).GetAwaiter().GetResult();
-                var missing = albumPage["SONGS"]!["data"]!.Count(d => d["FILESIZE"]!.ToString() == "0");
-                if (missing > 0)
-                    return torrentInfos; // empty
+                if (task.Result != null)
+                    torrentInfos.AddRange(task.Result);
+            }
+            
+            return torrentInfos
+                .OrderByDescending(o => o.Size)
+                .ToArray();
+        }
 
-                // MP3 128
-                torrentInfos.Add(ToReleaseInfo(result, 1));
+        private async Task<IList<ReleaseInfo>> ProcessResultAsync(DeezerGwAlbum result)
+        {
+            var torrentInfos = new List<ReleaseInfo>();
 
-                // MP3 320
-                if (DeezerAPI.Instance.Client.GWApi.ActiveUserData["USER"]!["OPTIONS"]!["web_hq"]!.Value<bool>())
-                {
-                    torrentInfos.Add(ToReleaseInfo(result, 3));
-                }
+            var albumPage = await DeezerAPI.Instance.Client.GWApi.GetAlbumPage(long.Parse(result.AlbumId));
 
-                // FLAC
-                if (DeezerAPI.Instance.Client.GWApi.ActiveUserData["USER"]!["OPTIONS"]!["web_lossless"]!.Value<bool>())
-                {
-                    torrentInfos.Add(ToReleaseInfo(result, 9));
-                }
+            var missing = albumPage["SONGS"]!["data"]!.Count(d => d["FILESIZE"]!.ToString() == "0");
+            if (missing > 0)
+                return null; // return null if missing any tracks
+
+            // TODO: deezer's api supplies the exact file sizes, if we pass that into ToReleaseInfo it show accurate sizing rather than a guesstimate
+
+            // MP3 128
+            torrentInfos.Add(ToReleaseInfo(result, 1));
+
+            // MP3 320
+            if (DeezerAPI.Instance.Client.GWApi.ActiveUserData["USER"]!["OPTIONS"]!["web_hq"]!.Value<bool>())
+            {
+                torrentInfos.Add(ToReleaseInfo(result, 3));
             }
 
-            // order by date
-            return
-                torrentInfos
-                    .OrderByDescending(o => o.Size)
-                    .ToArray();
+            // FLAC
+            if (DeezerAPI.Instance.Client.GWApi.ActiveUserData["USER"]!["OPTIONS"]!["web_lossless"]!.Value<bool>())
+            {
+                torrentInfos.Add(ToReleaseInfo(result, 9));
+            }
+
+            return torrentInfos;
         }
 
         private static ReleaseInfo ToReleaseInfo(DeezerGwAlbum x, int bitrate)
