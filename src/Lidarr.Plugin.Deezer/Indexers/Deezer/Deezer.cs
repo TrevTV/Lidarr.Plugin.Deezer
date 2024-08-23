@@ -13,7 +13,7 @@ namespace NzbDrone.Core.Indexers.Deezer
     {
         public override string Name => "Deezer";
         public override string Protocol => nameof(DeezerDownloadProtocol);
-        public override bool SupportsRss => true;
+        public override bool SupportsRss => false;
         public override bool SupportsSearch => true;
         public override int PageSize => 100;
         public override TimeSpan RateLimit => new TimeSpan(0);
