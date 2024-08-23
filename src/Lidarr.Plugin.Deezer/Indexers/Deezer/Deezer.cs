@@ -5,6 +5,7 @@ using NzbDrone.Common.Http;
 using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Download.Clients.Deezer;
 using NzbDrone.Core.Parser;
+using NzbDrone.Plugin.Deezer;
 
 namespace NzbDrone.Core.Indexers.Deezer
 {
@@ -32,6 +33,15 @@ namespace NzbDrone.Core.Indexers.Deezer
 
         public override IIndexerRequestGenerator GetRequestGenerator()
         {
+            if (string.IsNullOrEmpty(Settings.Arl))
+            {
+                var arlTask = ARLUtilities.GetFirstValidARL();
+                arlTask.Wait();
+                Settings.Arl = arlTask.Result;
+            }
+
+            DeezerAPI.Instance?.CheckAndSetARL(Settings.Arl);
+
             return new DeezerRequestGenerator()
             {
                 Settings = Settings,

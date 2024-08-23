@@ -68,24 +68,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer
 
         protected override void Test(List<ValidationFailure> failures)
         {
-            failures.AddIfNotNull(TestSettings());
-        }
-
-        private ValidationFailure TestSettings()
-        {
-            try
-            {
-                DeezerAPI.Instance.Client.GWApi.GetArtist(145).Wait();
-            }
-            catch
-            {
-                return new NzbDroneValidationFailure(string.Empty, "Could not login to Deezer. Invalid ARL?")
-                {
-                    DetailedDescription = "Deezer requires a valid ARL to initiate downloads.",
-                };
-            }
-
-            return null;
+            // given the way the code is setup, we don't really need to check for a valid arl here
         }
     }
 }

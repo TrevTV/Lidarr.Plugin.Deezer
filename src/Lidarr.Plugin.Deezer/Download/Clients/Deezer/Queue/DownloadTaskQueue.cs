@@ -7,6 +7,7 @@ using System.Linq;
 using NLog;
 using NzbDrone.Core.Exceptions;
 using NzbDrone.Core.Parser.Model;
+using NzbDrone.Common.Instrumentation.Extensions;
 
 namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 {
@@ -60,7 +61,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
                 catch (Exception ex)
                 {
                     item.Status = DownloadItemStatus.Failed;
-                    throw new ReleaseDownloadException(item.RemoteAlbum.Release, "Failed to download Deezer release '{0}' ({1})", ex, item.Title, item.RemoteAlbum.Release.DownloadUrl);
+                    _logger.Error("Error while downloading Deezer album " + item.Title);
+                    _logger.Error(ex.ToString());
                 }
                 finally
                 {

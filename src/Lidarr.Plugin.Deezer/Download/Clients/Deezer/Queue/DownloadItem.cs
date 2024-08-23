@@ -12,6 +12,7 @@ using DeezNET.Data;
 using DeezNET.Exceptions;
 using Newtonsoft.Json.Linq;
 using NLog;
+using NzbDrone.Common.Instrumentation.Extensions;
 using NzbDrone.Core.Parser.Model;
 using NzbDrone.Plugin.Deezer;
 
@@ -74,7 +75,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
         private (long id, long size)[] _tracks;
         private DeezerURL _deezerUrl;
         private JToken _deezerAlbum;
-        private readonly DateTime _lastARLValidityCheck = DateTime.MinValue;
+        private DateTime _lastARLValidityCheck = DateTime.MinValue;
 
         public async Task DoDownload(DeezerSettings settings, Logger logger, CancellationToken cancellation = default)
         {
@@ -174,12 +175,12 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 
         public void EnsureValidity()
         {
-            if ((DateTime.Now - _lastARLValidityCheck).Minutes > 30)
+            if ((DateTime.Now - _lastARLValidityCheck).TotalMinutes > 30)
             {
-                // TODO: validity check, not sure if this works as intended
-                /*var safeToWork = DeezerAPI.Instance.CheckAndSetARL(DeezerAPI.Instance.Client.ActiveARL);
-                if (!safeToWork)
-                    throw new InvalidARLException("No valid ARLs are available.");*/
+                _lastARLValidityCheck = DateTime.Now;
+                var arlValid = ARLUtilities.IsValid(DeezerAPI.Instance.Client.ActiveARL);
+                if (!arlValid)
+                    throw new InvalidARLException("The applied ARL is not valid for downloading, cannot continue.");
             }
         }
 
