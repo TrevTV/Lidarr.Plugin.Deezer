@@ -20,6 +20,8 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
 {
     public class DownloadItem
     {
+        public MusicBrainzIds? MusicBrainzIds { get; private set; }
+
         public static async Task<DownloadItem> From(RemoteAlbum remoteAlbum)
         {
             string url = remoteAlbum.Release.DownloadUrl.Trim();
@@ -42,6 +44,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
                     Bitrate = bitrate,
                     RemoteAlbum = remoteAlbum,
                     _deezerUrl = deezerUrl,
+                    MusicBrainzIds = ExtractMusicBrainzIds(remoteAlbum),
                 };
 
                 await item.SetDeezerData();
@@ -160,7 +163,7 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
                 }
             }
 
-            await DeezerAPI.Instance.Client.Downloader.ApplyMetadataToFile(track, outPath, 512, plainLyrics, token: cancellation);
+            await DeezerAPI.Instance.Client.Downloader.ApplyMetadataToFile(track, outPath, 512, plainLyrics, MusicBrainzIds, cancellation);
 
             if (syncLyrics != null)
                 await CreateLrcFile(Path.Combine(outDir, MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", "lrc", page, _deezerAlbum)), syncLyrics);
@@ -225,6 +228,55 @@ namespace NzbDrone.Core.Download.Clients.Deezer.Queue
                     lrcContent.AppendLine(CultureInfo.InvariantCulture, $"{lyric.LrcTimestamp} {lyric.Line}");
             }
             await File.WriteAllTextAsync(lrcFilePath, lrcContent.ToString());
+        }
+
+        private static MusicBrainzIds ExtractMusicBrainzIds(RemoteAlbum remoteAlbum)
+        {
+            if (remoteAlbum == null || remoteAlbum.Artist == null || remoteAlbum.Albums == null || !remoteAlbum.Albums.Any())
+            {
+                return null;
+            }
+
+            var album = remoteAlbum.Albums[0];
+
+            // Find the monitored release
+            var monitoredRelease = album.AlbumReleases?.Value?.FirstOrDefault(r => r.Monitored);
+            if (monitoredRelease == null)
+            {
+                // Fallback: no monitored release, can't extract ReleaseId or TrackRecordingIds
+                return new MusicBrainzIds
+                {
+                    ArtistId = remoteAlbum.Artist.ForeignArtistId,
+                    ReleaseGroupId = album.ForeignAlbumId,
+                    ReleaseId = null,
+                    ReleaseArtistId = null,
+                    TrackRecordingIds = null
+                };
+            }
+
+            // Extract TrackRecordingIds from the monitored release's tracks
+            Dictionary<int, string>? trackRecordingIds = null;
+            var tracks = monitoredRelease.Tracks?.Value;
+            if (tracks != null && tracks.Any())
+            {
+                trackRecordingIds = new Dictionary<int, string>();
+                foreach (var track in tracks)
+                {
+                    if (track.AbsoluteTrackNumber > 0 && !string.IsNullOrEmpty(track.ForeignRecordingId))
+                    {
+                        trackRecordingIds[track.AbsoluteTrackNumber] = track.ForeignRecordingId;
+                    }
+                }
+            }
+
+            return new MusicBrainzIds
+            {
+                ArtistId = remoteAlbum.Artist.ForeignArtistId,
+                ReleaseGroupId = album.ForeignAlbumId,
+                ReleaseId = monitoredRelease.ForeignReleaseId,
+                ReleaseArtistId = album.Artist?.Value?.ForeignArtistId,
+                TrackRecordingIds = trackRecordingIds
+            };
         }
     }
 }
